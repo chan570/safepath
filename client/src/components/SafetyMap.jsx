@@ -458,10 +458,9 @@ export default function SafetyMap({ onReportClick }) {
       <div className="map-widgets-container" style={{ zIndex: 99999 }}>
         {/* NEW Report Hazard FAB */}
         <button 
-          className="map-widget-btn" 
+          className={`report-hazard-btn ${reportMode ? 'active' : ''}`}
           onClick={() => setReportMode(!reportMode)} 
           title="Report Hazard"
-          style={{ width: 'auto', padding: '0 16px', borderRadius: '24px', backgroundColor: reportMode ? 'var(--gm-danger)' : 'white', color: reportMode ? 'white' : 'black', display: 'flex', gap: '8px', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', transition: 'all 0.3s ease' }}
         >
           <AlertOctagon size={20} color={reportMode ? 'white' : 'var(--gm-danger)'} />
           {reportMode ? 'Cancel Report' : 'Report Hazard'}
