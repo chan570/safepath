@@ -1,0 +1,802 @@
+[
+  {
+    "id": "crime_0",
+    "coordinates": {
+      "lat": 28.685644883139563,
+      "lng": 77.22287062326012
+    },
+    "severity": "Low",
+    "type": "Bag Snatching",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_1",
+    "coordinates": {
+      "lat": 28.584526171750415,
+      "lng": 77.26757966308533
+    },
+    "severity": "Medium",
+    "type": "Theft",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_2",
+    "coordinates": {
+      "lat": 28.604052987660538,
+      "lng": 77.13689750959371
+    },
+    "severity": "Low",
+    "type": "Vandalism",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_3",
+    "coordinates": {
+      "lat": 28.68358582866828,
+      "lng": 77.18859614600878
+    },
+    "severity": "High",
+    "type": "Vandalism",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_4",
+    "coordinates": {
+      "lat": 28.67855422063617,
+      "lng": 77.15972713613225
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_5",
+    "coordinates": {
+      "lat": 28.54256803457727,
+      "lng": 77.23405641490682
+    },
+    "severity": "Medium",
+    "type": "Vandalism",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_6",
+    "coordinates": {
+      "lat": 28.545647241097893,
+      "lng": 77.13635371096878
+    },
+    "severity": "Medium",
+    "type": "Theft",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_7",
+    "coordinates": {
+      "lat": 28.664268119157047,
+      "lng": 77.14674294798748
+    },
+    "severity": "Medium",
+    "type": "Assault",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_8",
+    "coordinates": {
+      "lat": 28.653480046172394,
+      "lng": 77.25111618123819
+    },
+    "severity": "Low",
+    "type": "Bag Snatching",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_9",
+    "coordinates": {
+      "lat": 28.541169307899146,
+      "lng": 77.15575995869366
+    },
+    "severity": "Low",
+    "type": "Bag Snatching",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_10",
+    "coordinates": {
+      "lat": 28.593928665622204,
+      "lng": 77.26950050824003
+    },
+    "severity": "High",
+    "type": "Vandalism",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_11",
+    "coordinates": {
+      "lat": 28.6875297975744,
+      "lng": 77.15802778474944
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_12",
+    "coordinates": {
+      "lat": 28.680854162896996,
+      "lng": 77.14204480357257
+    },
+    "severity": "Low",
+    "type": "Bag Snatching",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_13",
+    "coordinates": {
+      "lat": 28.680648375252783,
+      "lng": 77.24418798264547
+    },
+    "severity": "High",
+    "type": "Assault",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_14",
+    "coordinates": {
+      "lat": 28.5637785954805,
+      "lng": 77.25033311083914
+    },
+    "severity": "Medium",
+    "type": "Theft",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_15",
+    "coordinates": {
+      "lat": 28.63443865200138,
+      "lng": 77.1766206686426
+    },
+    "severity": "Medium",
+    "type": "Theft",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_16",
+    "coordinates": {
+      "lat": 28.672341675201505,
+      "lng": 77.15460124741689
+    },
+    "severity": "Medium",
+    "type": "Assault",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_17",
+    "coordinates": {
+      "lat": 28.657355403575362,
+      "lng": 77.2016417683669
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_18",
+    "coordinates": {
+      "lat": 28.621011387347583,
+      "lng": 77.16030769598916
+    },
+    "severity": "High",
+    "type": "Harassment",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_19",
+    "coordinates": {
+      "lat": 28.5499332513685,
+      "lng": 77.14554687485892
+    },
+    "severity": "High",
+    "type": "Bag Snatching",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_20",
+    "coordinates": {
+      "lat": 28.56776106520539,
+      "lng": 77.20156007928473
+    },
+    "severity": "High",
+    "type": "Vandalism",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_21",
+    "coordinates": {
+      "lat": 28.57989760095702,
+      "lng": 77.2078943611805
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_22",
+    "coordinates": {
+      "lat": 28.653652037099388,
+      "lng": 77.2169966829133
+    },
+    "severity": "Medium",
+    "type": "Vandalism",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_23",
+    "coordinates": {
+      "lat": 28.60927438138628,
+      "lng": 77.18497756430823
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_24",
+    "coordinates": {
+      "lat": 28.61883840096771,
+      "lng": 77.17156104160553
+    },
+    "severity": "Medium",
+    "type": "Bag Snatching",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_25",
+    "coordinates": {
+      "lat": 28.571985597773526,
+      "lng": 77.18796232488772
+    },
+    "severity": "High",
+    "type": "Bag Snatching",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_26",
+    "coordinates": {
+      "lat": 28.561978944063444,
+      "lng": 77.19231466066762
+    },
+    "severity": "Medium",
+    "type": "Vandalism",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_27",
+    "coordinates": {
+      "lat": 28.601834283563043,
+      "lng": 77.19687258942182
+    },
+    "severity": "High",
+    "type": "Bag Snatching",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_28",
+    "coordinates": {
+      "lat": 28.588391296682804,
+      "lng": 77.24091534509425
+    },
+    "severity": "High",
+    "type": "Harassment",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_29",
+    "coordinates": {
+      "lat": 28.56332620361705,
+      "lng": 77.21470024859919
+    },
+    "severity": "Medium",
+    "type": "Assault",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_30",
+    "coordinates": {
+      "lat": 28.6212764038399,
+      "lng": 77.1340599309185
+    },
+    "severity": "Low",
+    "type": "Theft",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_31",
+    "coordinates": {
+      "lat": 28.631762978616393,
+      "lng": 77.2792961082313
+    },
+    "severity": "High",
+    "type": "Bag Snatching",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_32",
+    "coordinates": {
+      "lat": 28.585300274141446,
+      "lng": 77.23508944828913
+    },
+    "severity": "Medium",
+    "type": "Vandalism",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_33",
+    "coordinates": {
+      "lat": 28.575029045922264,
+      "lng": 77.14641154664216
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_34",
+    "coordinates": {
+      "lat": 28.543981832715424,
+      "lng": 77.16646448245926
+    },
+    "severity": "Low",
+    "type": "Vandalism",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_35",
+    "coordinates": {
+      "lat": 28.554946339790252,
+      "lng": 77.13489046207003
+    },
+    "severity": "High",
+    "type": "Harassment",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_36",
+    "coordinates": {
+      "lat": 28.663591247971823,
+      "lng": 77.28016743838175
+    },
+    "severity": "Low",
+    "type": "Bag Snatching",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_37",
+    "coordinates": {
+      "lat": 28.572025380573482,
+      "lng": 77.17152741335215
+    },
+    "severity": "Medium",
+    "type": "Bag Snatching",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_38",
+    "coordinates": {
+      "lat": 28.634712988166413,
+      "lng": 77.17258281689453
+    },
+    "severity": "Medium",
+    "type": "Bag Snatching",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_39",
+    "coordinates": {
+      "lat": 28.582163598408318,
+      "lng": 77.15766236685387
+    },
+    "severity": "Medium",
+    "type": "Bag Snatching",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_40",
+    "coordinates": {
+      "lat": 28.56587302472188,
+      "lng": 77.21159464027487
+    },
+    "severity": "Low",
+    "type": "Assault",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_41",
+    "coordinates": {
+      "lat": 28.553434697928097,
+      "lng": 77.26720910583008
+    },
+    "severity": "Medium",
+    "type": "Theft",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_42",
+    "coordinates": {
+      "lat": 28.672076262819676,
+      "lng": 77.21078347810197
+    },
+    "severity": "High",
+    "type": "Assault",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_43",
+    "coordinates": {
+      "lat": 28.54593401676801,
+      "lng": 77.19573626122536
+    },
+    "severity": "High",
+    "type": "Bag Snatching",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_44",
+    "coordinates": {
+      "lat": 28.59350088286634,
+      "lng": 77.23653879901718
+    },
+    "severity": "Low",
+    "type": "Harassment",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_45",
+    "coordinates": {
+      "lat": 28.555157717722892,
+      "lng": 77.25684482809172
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_46",
+    "coordinates": {
+      "lat": 28.62715594468127,
+      "lng": 77.18339812334972
+    },
+    "severity": "High",
+    "type": "Harassment",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_47",
+    "coordinates": {
+      "lat": 28.601179315990795,
+      "lng": 77.21211388596491
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_48",
+    "coordinates": {
+      "lat": 28.597183671171255,
+      "lng": 77.26986350734471
+    },
+    "severity": "Medium",
+    "type": "Theft",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_49",
+    "coordinates": {
+      "lat": 28.545352130326183,
+      "lng": 77.17379042310995
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_50",
+    "coordinates": {
+      "lat": 28.685620038307107,
+      "lng": 77.23546182122561
+    },
+    "severity": "Low",
+    "type": "Assault",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_51",
+    "coordinates": {
+      "lat": 28.675202312170647,
+      "lng": 77.26775257911751
+    },
+    "severity": "High",
+    "type": "Assault",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_52",
+    "coordinates": {
+      "lat": 28.671246822088012,
+      "lng": 77.24773408471674
+    },
+    "severity": "Medium",
+    "type": "Vandalism",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_53",
+    "coordinates": {
+      "lat": 28.570613505405216,
+      "lng": 77.16594279861445
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_54",
+    "coordinates": {
+      "lat": 28.588300806820676,
+      "lng": 77.14003236396219
+    },
+    "severity": "Medium",
+    "type": "Vandalism",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_55",
+    "coordinates": {
+      "lat": 28.589567257504708,
+      "lng": 77.21832863873826
+    },
+    "severity": "Medium",
+    "type": "Vandalism",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_56",
+    "coordinates": {
+      "lat": 28.60900273978995,
+      "lng": 77.16651172538911
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_57",
+    "coordinates": {
+      "lat": 28.58746602694607,
+      "lng": 77.15846380269316
+    },
+    "severity": "Medium",
+    "type": "Theft",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_58",
+    "coordinates": {
+      "lat": 28.605041358584536,
+      "lng": 77.19955581944988
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_59",
+    "coordinates": {
+      "lat": 28.685869499237832,
+      "lng": 77.19505088990783
+    },
+    "severity": "High",
+    "type": "Bag Snatching",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_60",
+    "coordinates": {
+      "lat": 28.570344249015115,
+      "lng": 77.15258852218608
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_61",
+    "coordinates": {
+      "lat": 28.65866976474212,
+      "lng": 77.13576960257625
+    },
+    "severity": "Medium",
+    "type": "Bag Snatching",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_62",
+    "coordinates": {
+      "lat": 28.593216816608866,
+      "lng": 77.23664695914849
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_63",
+    "coordinates": {
+      "lat": 28.661442270619585,
+      "lng": 77.19922835673145
+    },
+    "severity": "High",
+    "type": "Harassment",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_64",
+    "coordinates": {
+      "lat": 28.67274509389656,
+      "lng": 77.23548767318525
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_65",
+    "coordinates": {
+      "lat": 28.579220045108627,
+      "lng": 77.25787782310395
+    },
+    "severity": "Medium",
+    "type": "Assault",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_66",
+    "coordinates": {
+      "lat": 28.674776753525602,
+      "lng": 77.24134997193106
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_67",
+    "coordinates": {
+      "lat": 28.559681881704137,
+      "lng": 77.16002350796066
+    },
+    "severity": "Medium",
+    "type": "Assault",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_68",
+    "coordinates": {
+      "lat": 28.562101752500233,
+      "lng": 77.14184415291038
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_69",
+    "coordinates": {
+      "lat": 28.63892941514737,
+      "lng": 77.25023308759953
+    },
+    "severity": "High",
+    "type": "Vandalism",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_70",
+    "coordinates": {
+      "lat": 28.594069753974487,
+      "lng": 77.2468306139333
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_71",
+    "coordinates": {
+      "lat": 28.61530691097065,
+      "lng": 77.22411297281101
+    },
+    "severity": "Medium",
+    "type": "Bag Snatching",
+    "description": "Reported area for theft."
+  },
+  {
+    "id": "crime_72",
+    "coordinates": {
+      "lat": 28.664204716764008,
+      "lng": 77.15836056121755
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for harassment."
+  },
+  {
+    "id": "crime_73",
+    "coordinates": {
+      "lat": 28.63212828091238,
+      "lng": 77.22090379365933
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_74",
+    "coordinates": {
+      "lat": 28.663844096723743,
+      "lng": 77.18690586397749
+    },
+    "severity": "Medium",
+    "type": "Harassment",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_75",
+    "coordinates": {
+      "lat": 28.64010181233809,
+      "lng": 77.24440819963034
+    },
+    "severity": "High",
+    "type": "Harassment",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_76",
+    "coordinates": {
+      "lat": 28.58960808954198,
+      "lng": 77.22368757266504
+    },
+    "severity": "High",
+    "type": "Theft",
+    "description": "Reported area for assault."
+  },
+  {
+    "id": "crime_77",
+    "coordinates": {
+      "lat": 28.55003340009327,
+      "lng": 77.27140977565747
+    },
+    "severity": "High",
+    "type": "Harassment",
+    "description": "Reported area for vandalism."
+  },
+  {
+    "id": "crime_78",
+    "coordinates": {
+      "lat": 28.647766190580274,
+      "lng": 77.27712463185685
+    },
+    "severity": "Low",
+    "type": "Assault",
+    "description": "Reported area for bag snatching."
+  },
+  {
+    "id": "crime_79",
+    "coordinates": {
+      "lat": 28.567447711018897,
+      "lng": 77.21303327037423
+    },
+    "severity": "High",
+    "type": "Assault",
+    "description": "Reported area for bag snatching."
+  }
+]

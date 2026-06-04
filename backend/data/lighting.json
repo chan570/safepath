@@ -1,0 +1,722 @@
+[
+  {
+    "id": "light_0",
+    "coordinates": {
+      "lat": 28.677644883139564,
+      "lng": 77.23087062326012
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_1",
+    "coordinates": {
+      "lat": 28.576526171750416,
+      "lng": 77.27557966308532
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_2",
+    "coordinates": {
+      "lat": 28.59605298766054,
+      "lng": 77.1448975095937
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_3",
+    "coordinates": {
+      "lat": 28.675585828668282,
+      "lng": 77.19659614600877
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_4",
+    "coordinates": {
+      "lat": 28.67055422063617,
+      "lng": 77.16772713613224
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_5",
+    "coordinates": {
+      "lat": 28.53456803457727,
+      "lng": 77.24205641490681
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_6",
+    "coordinates": {
+      "lat": 28.537647241097893,
+      "lng": 77.14435371096877
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_7",
+    "coordinates": {
+      "lat": 28.656268119157048,
+      "lng": 77.15474294798747
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_8",
+    "coordinates": {
+      "lat": 28.645480046172395,
+      "lng": 77.25911618123818
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_9",
+    "coordinates": {
+      "lat": 28.533169307899147,
+      "lng": 77.16375995869366
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_10",
+    "coordinates": {
+      "lat": 28.585928665622205,
+      "lng": 77.27750050824002
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_11",
+    "coordinates": {
+      "lat": 28.6795297975744,
+      "lng": 77.16602778474943
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_12",
+    "coordinates": {
+      "lat": 28.672854162896996,
+      "lng": 77.15004480357257
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_13",
+    "coordinates": {
+      "lat": 28.672648375252784,
+      "lng": 77.25218798264547
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_14",
+    "coordinates": {
+      "lat": 28.5557785954805,
+      "lng": 77.25833311083913
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_15",
+    "coordinates": {
+      "lat": 28.62643865200138,
+      "lng": 77.1846206686426
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_16",
+    "coordinates": {
+      "lat": 28.664341675201506,
+      "lng": 77.16260124741689
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_17",
+    "coordinates": {
+      "lat": 28.649355403575363,
+      "lng": 77.2096417683669
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_18",
+    "coordinates": {
+      "lat": 28.613011387347584,
+      "lng": 77.16830769598916
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_19",
+    "coordinates": {
+      "lat": 28.5419332513685,
+      "lng": 77.15354687485892
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_20",
+    "coordinates": {
+      "lat": 28.55976106520539,
+      "lng": 77.20956007928473
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_21",
+    "coordinates": {
+      "lat": 28.57189760095702,
+      "lng": 77.21589436118049
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_22",
+    "coordinates": {
+      "lat": 28.64565203709939,
+      "lng": 77.2249966829133
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_23",
+    "coordinates": {
+      "lat": 28.601274381386283,
+      "lng": 77.19297756430822
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_24",
+    "coordinates": {
+      "lat": 28.61083840096771,
+      "lng": 77.17956104160552
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_25",
+    "coordinates": {
+      "lat": 28.563985597773527,
+      "lng": 77.19596232488772
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_26",
+    "coordinates": {
+      "lat": 28.553978944063445,
+      "lng": 77.20031466066762
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_27",
+    "coordinates": {
+      "lat": 28.593834283563044,
+      "lng": 77.20487258942181
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_28",
+    "coordinates": {
+      "lat": 28.580391296682805,
+      "lng": 77.24891534509425
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_29",
+    "coordinates": {
+      "lat": 28.55532620361705,
+      "lng": 77.22270024859918
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_30",
+    "coordinates": {
+      "lat": 28.6132764038399,
+      "lng": 77.14205993091849
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_31",
+    "coordinates": {
+      "lat": 28.623762978616394,
+      "lng": 77.2872961082313
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_32",
+    "coordinates": {
+      "lat": 28.577300274141447,
+      "lng": 77.24308944828913
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_33",
+    "coordinates": {
+      "lat": 28.567029045922265,
+      "lng": 77.15441154664215
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_34",
+    "coordinates": {
+      "lat": 28.535981832715425,
+      "lng": 77.17446448245926
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_35",
+    "coordinates": {
+      "lat": 28.546946339790253,
+      "lng": 77.14289046207003
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_36",
+    "coordinates": {
+      "lat": 28.655591247971824,
+      "lng": 77.28816743838175
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_37",
+    "coordinates": {
+      "lat": 28.564025380573483,
+      "lng": 77.17952741335215
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_38",
+    "coordinates": {
+      "lat": 28.626712988166414,
+      "lng": 77.18058281689453
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_39",
+    "coordinates": {
+      "lat": 28.57416359840832,
+      "lng": 77.16566236685387
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_40",
+    "coordinates": {
+      "lat": 28.557873024721882,
+      "lng": 77.21959464027486
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_41",
+    "coordinates": {
+      "lat": 28.545434697928098,
+      "lng": 77.27520910583007
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_42",
+    "coordinates": {
+      "lat": 28.664076262819677,
+      "lng": 77.21878347810197
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_43",
+    "coordinates": {
+      "lat": 28.53793401676801,
+      "lng": 77.20373626122536
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_44",
+    "coordinates": {
+      "lat": 28.58550088286634,
+      "lng": 77.24453879901718
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_45",
+    "coordinates": {
+      "lat": 28.547157717722893,
+      "lng": 77.26484482809171
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_46",
+    "coordinates": {
+      "lat": 28.61915594468127,
+      "lng": 77.19139812334971
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_47",
+    "coordinates": {
+      "lat": 28.593179315990795,
+      "lng": 77.2201138859649
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_48",
+    "coordinates": {
+      "lat": 28.589183671171256,
+      "lng": 77.2778635073447
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_49",
+    "coordinates": {
+      "lat": 28.537352130326184,
+      "lng": 77.18179042310994
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_50",
+    "coordinates": {
+      "lat": 28.677620038307108,
+      "lng": 77.24346182122561
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_51",
+    "coordinates": {
+      "lat": 28.667202312170648,
+      "lng": 77.27575257911751
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_52",
+    "coordinates": {
+      "lat": 28.663246822088013,
+      "lng": 77.25573408471674
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_53",
+    "coordinates": {
+      "lat": 28.562613505405217,
+      "lng": 77.17394279861445
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_54",
+    "coordinates": {
+      "lat": 28.580300806820677,
+      "lng": 77.14803236396219
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_55",
+    "coordinates": {
+      "lat": 28.58156725750471,
+      "lng": 77.22632863873825
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_56",
+    "coordinates": {
+      "lat": 28.60100273978995,
+      "lng": 77.17451172538911
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_57",
+    "coordinates": {
+      "lat": 28.579466026946072,
+      "lng": 77.16646380269316
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_58",
+    "coordinates": {
+      "lat": 28.597041358584537,
+      "lng": 77.20755581944988
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_59",
+    "coordinates": {
+      "lat": 28.677869499237833,
+      "lng": 77.20305088990783
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_60",
+    "coordinates": {
+      "lat": 28.562344249015116,
+      "lng": 77.16058852218607
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_61",
+    "coordinates": {
+      "lat": 28.65066976474212,
+      "lng": 77.14376960257624
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_62",
+    "coordinates": {
+      "lat": 28.585216816608867,
+      "lng": 77.24464695914848
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_63",
+    "coordinates": {
+      "lat": 28.653442270619585,
+      "lng": 77.20722835673145
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_64",
+    "coordinates": {
+      "lat": 28.66474509389656,
+      "lng": 77.24348767318524
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_65",
+    "coordinates": {
+      "lat": 28.57122004510863,
+      "lng": 77.26587782310395
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_66",
+    "coordinates": {
+      "lat": 28.666776753525603,
+      "lng": 77.24934997193105
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_67",
+    "coordinates": {
+      "lat": 28.551681881704138,
+      "lng": 77.16802350796065
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_68",
+    "coordinates": {
+      "lat": 28.554101752500234,
+      "lng": 77.14984415291038
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_69",
+    "coordinates": {
+      "lat": 28.63092941514737,
+      "lng": 77.25823308759952
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_70",
+    "coordinates": {
+      "lat": 28.58606975397449,
+      "lng": 77.2548306139333
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_71",
+    "coordinates": {
+      "lat": 28.60730691097065,
+      "lng": 77.23211297281101
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_72",
+    "coordinates": {
+      "lat": 28.65620471676401,
+      "lng": 77.16636056121754
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_73",
+    "coordinates": {
+      "lat": 28.62412828091238,
+      "lng": 77.22890379365933
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_74",
+    "coordinates": {
+      "lat": 28.655844096723744,
+      "lng": 77.19490586397748
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_75",
+    "coordinates": {
+      "lat": 28.632101812338092,
+      "lng": 77.25240819963034
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_76",
+    "coordinates": {
+      "lat": 28.58160808954198,
+      "lng": 77.23168757266504
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_77",
+    "coordinates": {
+      "lat": 28.54203340009327,
+      "lng": 77.27940977565747
+    },
+    "status": "Dim",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_78",
+    "coordinates": {
+      "lat": 28.639766190580275,
+      "lng": 77.28512463185685
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  },
+  {
+    "id": "light_79",
+    "coordinates": {
+      "lat": 28.559447711018898,
+      "lng": 77.22103327037422
+    },
+    "status": "Unlit",
+    "description": "Street light malfunction reported by community."
+  }
+]

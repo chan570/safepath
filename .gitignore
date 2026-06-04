@@ -1,0 +1,18 @@
+# Dependency directories
+node_modules/
+
+# Production build outputs
+dist/
+build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# Local Mock Database files
+backend/data/db.json
+
+# Logs
+*.log
+npm-debug.log*

@@ -1,0 +1,802 @@
+[
+  {
+    "id": "accident_0",
+    "coordinates": {
+      "lat": 28.693644883139562,
+      "lng": 77.21487062326013
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_1",
+    "coordinates": {
+      "lat": 28.592526171750414,
+      "lng": 77.25957966308533
+    },
+    "severity": "Low",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_2",
+    "coordinates": {
+      "lat": 28.612052987660537,
+      "lng": 77.12889750959371
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_3",
+    "coordinates": {
+      "lat": 28.69158582866828,
+      "lng": 77.18059614600878
+    },
+    "severity": "Low",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_4",
+    "coordinates": {
+      "lat": 28.686554220636168,
+      "lng": 77.15172713613225
+    },
+    "severity": "High",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_5",
+    "coordinates": {
+      "lat": 28.550568034577267,
+      "lng": 77.22605641490682
+    },
+    "severity": "Medium",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_6",
+    "coordinates": {
+      "lat": 28.55364724109789,
+      "lng": 77.12835371096878
+    },
+    "severity": "High",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_7",
+    "coordinates": {
+      "lat": 28.672268119157046,
+      "lng": 77.13874294798748
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_8",
+    "coordinates": {
+      "lat": 28.661480046172393,
+      "lng": 77.2431161812382
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_9",
+    "coordinates": {
+      "lat": 28.549169307899145,
+      "lng": 77.14775995869367
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_10",
+    "coordinates": {
+      "lat": 28.601928665622204,
+      "lng": 77.26150050824003
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_11",
+    "coordinates": {
+      "lat": 28.695529797574398,
+      "lng": 77.15002778474944
+    },
+    "severity": "High",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_12",
+    "coordinates": {
+      "lat": 28.688854162896995,
+      "lng": 77.13404480357258
+    },
+    "severity": "High",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_13",
+    "coordinates": {
+      "lat": 28.688648375252782,
+      "lng": 77.23618798264548
+    },
+    "severity": "Medium",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_14",
+    "coordinates": {
+      "lat": 28.5717785954805,
+      "lng": 77.24233311083914
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_15",
+    "coordinates": {
+      "lat": 28.642438652001378,
+      "lng": 77.1686206686426
+    },
+    "severity": "Medium",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_16",
+    "coordinates": {
+      "lat": 28.680341675201504,
+      "lng": 77.1466012474169
+    },
+    "severity": "High",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_17",
+    "coordinates": {
+      "lat": 28.66535540357536,
+      "lng": 77.1936417683669
+    },
+    "severity": "Low",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_18",
+    "coordinates": {
+      "lat": 28.62901138734758,
+      "lng": 77.15230769598917
+    },
+    "severity": "High",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_19",
+    "coordinates": {
+      "lat": 28.5579332513685,
+      "lng": 77.13754687485893
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_20",
+    "coordinates": {
+      "lat": 28.575761065205388,
+      "lng": 77.19356007928474
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_21",
+    "coordinates": {
+      "lat": 28.587897600957017,
+      "lng": 77.1998943611805
+    },
+    "severity": "Low",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_22",
+    "coordinates": {
+      "lat": 28.661652037099387,
+      "lng": 77.20899668291331
+    },
+    "severity": "High",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_23",
+    "coordinates": {
+      "lat": 28.61727438138628,
+      "lng": 77.17697756430823
+    },
+    "severity": "Low",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_24",
+    "coordinates": {
+      "lat": 28.62683840096771,
+      "lng": 77.16356104160553
+    },
+    "severity": "Medium",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_25",
+    "coordinates": {
+      "lat": 28.579985597773526,
+      "lng": 77.17996232488773
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_26",
+    "coordinates": {
+      "lat": 28.569978944063443,
+      "lng": 77.18431466066762
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_27",
+    "coordinates": {
+      "lat": 28.609834283563043,
+      "lng": 77.18887258942182
+    },
+    "severity": "Low",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_28",
+    "coordinates": {
+      "lat": 28.596391296682803,
+      "lng": 77.23291534509426
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_29",
+    "coordinates": {
+      "lat": 28.571326203617048,
+      "lng": 77.20670024859919
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_30",
+    "coordinates": {
+      "lat": 28.6292764038399,
+      "lng": 77.1260599309185
+    },
+    "severity": "High",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_31",
+    "coordinates": {
+      "lat": 28.639762978616393,
+      "lng": 77.27129610823131
+    },
+    "severity": "High",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_32",
+    "coordinates": {
+      "lat": 28.593300274141445,
+      "lng": 77.22708944828914
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_33",
+    "coordinates": {
+      "lat": 28.583029045922263,
+      "lng": 77.13841154664216
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_34",
+    "coordinates": {
+      "lat": 28.551981832715423,
+      "lng": 77.15846448245927
+    },
+    "severity": "Low",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_35",
+    "coordinates": {
+      "lat": 28.56294633979025,
+      "lng": 77.12689046207004
+    },
+    "severity": "Low",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_36",
+    "coordinates": {
+      "lat": 28.671591247971822,
+      "lng": 77.27216743838176
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_37",
+    "coordinates": {
+      "lat": 28.58002538057348,
+      "lng": 77.16352741335216
+    },
+    "severity": "High",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_38",
+    "coordinates": {
+      "lat": 28.642712988166412,
+      "lng": 77.16458281689454
+    },
+    "severity": "High",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_39",
+    "coordinates": {
+      "lat": 28.590163598408317,
+      "lng": 77.14966236685387
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_40",
+    "coordinates": {
+      "lat": 28.57387302472188,
+      "lng": 77.20359464027487
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_41",
+    "coordinates": {
+      "lat": 28.561434697928096,
+      "lng": 77.25920910583008
+    },
+    "severity": "High",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_42",
+    "coordinates": {
+      "lat": 28.680076262819675,
+      "lng": 77.20278347810198
+    },
+    "severity": "Medium",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_43",
+    "coordinates": {
+      "lat": 28.553934016768007,
+      "lng": 77.18773626122537
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_44",
+    "coordinates": {
+      "lat": 28.60150088286634,
+      "lng": 77.22853879901719
+    },
+    "severity": "High",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_45",
+    "coordinates": {
+      "lat": 28.56315771772289,
+      "lng": 77.24884482809172
+    },
+    "severity": "Low",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_46",
+    "coordinates": {
+      "lat": 28.63515594468127,
+      "lng": 77.17539812334972
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_47",
+    "coordinates": {
+      "lat": 28.609179315990794,
+      "lng": 77.20411388596492
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_48",
+    "coordinates": {
+      "lat": 28.605183671171254,
+      "lng": 77.26186350734471
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_49",
+    "coordinates": {
+      "lat": 28.553352130326182,
+      "lng": 77.16579042310995
+    },
+    "severity": "High",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_50",
+    "coordinates": {
+      "lat": 28.693620038307106,
+      "lng": 77.22746182122562
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_51",
+    "coordinates": {
+      "lat": 28.683202312170646,
+      "lng": 77.25975257911752
+    },
+    "severity": "Low",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_52",
+    "coordinates": {
+      "lat": 28.67924682208801,
+      "lng": 77.23973408471674
+    },
+    "severity": "Low",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_53",
+    "coordinates": {
+      "lat": 28.578613505405215,
+      "lng": 77.15794279861446
+    },
+    "severity": "High",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_54",
+    "coordinates": {
+      "lat": 28.596300806820675,
+      "lng": 77.1320323639622
+    },
+    "severity": "High",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_55",
+    "coordinates": {
+      "lat": 28.597567257504707,
+      "lng": 77.21032863873826
+    },
+    "severity": "High",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_56",
+    "coordinates": {
+      "lat": 28.61700273978995,
+      "lng": 77.15851172538912
+    },
+    "severity": "Medium",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_57",
+    "coordinates": {
+      "lat": 28.59546602694607,
+      "lng": 77.15046380269317
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_58",
+    "coordinates": {
+      "lat": 28.613041358584535,
+      "lng": 77.19155581944989
+    },
+    "severity": "High",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_59",
+    "coordinates": {
+      "lat": 28.69386949923783,
+      "lng": 77.18705088990784
+    },
+    "severity": "High",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_60",
+    "coordinates": {
+      "lat": 28.578344249015114,
+      "lng": 77.14458852218608
+    },
+    "severity": "High",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_61",
+    "coordinates": {
+      "lat": 28.666669764742117,
+      "lng": 77.12776960257625
+    },
+    "severity": "Low",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_62",
+    "coordinates": {
+      "lat": 28.601216816608865,
+      "lng": 77.22864695914849
+    },
+    "severity": "Low",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_63",
+    "coordinates": {
+      "lat": 28.669442270619584,
+      "lng": 77.19122835673146
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_64",
+    "coordinates": {
+      "lat": 28.680745093896558,
+      "lng": 77.22748767318525
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_65",
+    "coordinates": {
+      "lat": 28.587220045108626,
+      "lng": 77.24987782310396
+    },
+    "severity": "High",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_66",
+    "coordinates": {
+      "lat": 28.6827767535256,
+      "lng": 77.23334997193106
+    },
+    "severity": "Low",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_67",
+    "coordinates": {
+      "lat": 28.567681881704136,
+      "lng": 77.15202350796066
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_68",
+    "coordinates": {
+      "lat": 28.570101752500232,
+      "lng": 77.13384415291038
+    },
+    "severity": "High",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_69",
+    "coordinates": {
+      "lat": 28.64692941514737,
+      "lng": 77.24223308759953
+    },
+    "severity": "Medium",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_70",
+    "coordinates": {
+      "lat": 28.602069753974487,
+      "lng": 77.2388306139333
+    },
+    "severity": "Medium",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_71",
+    "coordinates": {
+      "lat": 28.623306910970648,
+      "lng": 77.21611297281102
+    },
+    "severity": "High",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_72",
+    "coordinates": {
+      "lat": 28.672204716764007,
+      "lng": 77.15036056121755
+    },
+    "severity": "Medium",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_73",
+    "coordinates": {
+      "lat": 28.64012828091238,
+      "lng": 77.21290379365934
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_74",
+    "coordinates": {
+      "lat": 28.671844096723742,
+      "lng": 77.17890586397749
+    },
+    "severity": "Medium",
+    "type": "Vehicle Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_75",
+    "coordinates": {
+      "lat": 28.64810181233809,
+      "lng": 77.23640819963035
+    },
+    "severity": "High",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_76",
+    "coordinates": {
+      "lat": 28.59760808954198,
+      "lng": 77.21568757266505
+    },
+    "severity": "Low",
+    "type": "Over speeding Accident",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_77",
+    "coordinates": {
+      "lat": 28.55803340009327,
+      "lng": 77.26340977565748
+    },
+    "severity": "Low",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_78",
+    "coordinates": {
+      "lat": 28.655766190580273,
+      "lng": 77.26912463185685
+    },
+    "severity": "Low",
+    "type": "Blind Spot Collision",
+    "description": "Traffic incident at intersection."
+  },
+  {
+    "id": "accident_79",
+    "coordinates": {
+      "lat": 28.575447711018896,
+      "lng": 77.20503327037423
+    },
+    "severity": "Medium",
+    "type": "Pedestrian Crash",
+    "description": "Traffic incident at intersection."
+  }
+]

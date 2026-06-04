@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1A73E8" />
+      <stop offset="100%" stop-color="#1557B0" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="6" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <!-- Background Shield shape -->
+  <path d="M256,32 C380,32 448,76 448,176 C448,312 344,432 256,480 C168,432 64,312 64,176 C64,76 132,32 256,32 Z" fill="url(#shieldGrad)" />
+  <!-- Inner Line Shield -->
+  <path d="M256,64 C350,64 400,98 400,176 C400,286 318,382 256,424 C194,382 112,286 112,176 C112,98 162,64 256,64 Z" fill="none" stroke="#ffffff" stroke-width="12" opacity="0.35" />
+  <!-- Inner White Shield Icon -->
+  <path d="M256,128 C306,128 336,146 336,188 C336,246 292,300 256,326 C220,300 176,246 176,188 C176,146 206,128 256,128 Z" fill="#ffffff" filter="url(#glow)" />
+</svg>
