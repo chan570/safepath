@@ -28,7 +28,7 @@ export default function Onboarding({ onComplete }) {
       setStep(step + 1);
     } else {
       localStorage.setItem('safepath_onboarded', 'true');
-      onComplete();
+      onComplete(); //take me to the app now 
     }
   };
 

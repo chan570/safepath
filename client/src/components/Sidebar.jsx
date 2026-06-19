@@ -56,6 +56,11 @@ export default function Sidebar() {
   const [showOptions, setShowOptions] = useState(false);
   const [isNavigating, setIsNavigating] = useState(false);
   const [activeDrawerTab, setActiveDrawerTab] = useState('menu'); // 'menu', 'safety', 'history', 'reports', 'auth'
+  
+  // Floating Center Modal States
+  const [showSafetyModal, setShowSafetyModal] = useState(false);
+  const [showHistoryModal, setShowHistoryModal] = useState(false);
+  const [showAuthModal, setShowAuthModal] = useState(false);
 
   // Input states
   const [srcQuery, setSrcQuery] = useState('');
@@ -91,6 +96,13 @@ export default function Sidebar() {
     if (destination) setDestQuery(destination.name);
     else setDestQuery('');
   }, [destination]);
+
+  // Auto-close login modal when user logs in successfully
+  useEffect(() => {
+    if (user) {
+      setShowAuthModal(false);
+    }
+  }, [user]);
 
   // Autocomplete suggest with Nominatim OSM geocoding + Local Presets
   const fetchSuggestions = async (query, setSuggestions) => {
@@ -767,7 +779,6 @@ export default function Sidebar() {
           )}
         </div>
       )}
-
       {/* C. SLIDING HAMBURGER SIDE MENUS */}
       {isDrawerOpen && (
         <div className="side-drawer-overlay" onClick={() => setIsDrawerOpen(false)}>
@@ -790,371 +801,368 @@ export default function Sidebar() {
               </button>
             </div>
 
-            {/* Content switching based on activeDrawerTab */}
+            {/* Content (Simplified to Menu Only) */}
             <div className="drawer-content">
-              {activeDrawerTab === 'menu' && (
+              <div className="drawer-section-title">Navigation Tools</div>
+              <div className={`drawer-item ${isDirectionsActive ? 'active' : ''}`} onClick={() => { setIsDirectionsActive(true); setIsDrawerOpen(false); }}>
+                <Navigation size={18} />
+                <span>Go to Route Planner</span>
+              </div>
+              <div className="drawer-item" onClick={() => { setIsDrawerOpen(false); setShowHistoryModal(true); }}>
+                <History size={18} />
+                <span>Bookmarks & History</span>
+              </div>
+              <div className="drawer-item" onClick={() => { setIsDrawerOpen(false); setShowSafetyModal(true); }}>
+                <Users size={18} />
+                <span>Safety Circle (Trusted Contacts)</span>
+              </div>
+
+              <div className="drawer-item" onClick={() => { setShowOnboarding(true); setIsDrawerOpen(false); }}>
+                <HelpCircle size={18} />
+                <span>How to Use / Onboarding</span>
+              </div>
+              
+              <div className="drawer-divider" />
+              
+              <div className="drawer-section-title">Account Profiles</div>
+              {user ? (
                 <>
-                  <div className="drawer-section-title">Navigation Tools</div>
-                  <div className={`drawer-item ${isDirectionsActive ? 'active' : ''}`} onClick={() => { setIsDirectionsActive(true); setIsDrawerOpen(false); }}>
-                    <Navigation size={18} />
-                    <span>Go to Route Planner</span>
-                  </div>
-                  <div className="drawer-item" onClick={() => { setActiveDrawerTab('history'); }}>
-                    <History size={18} />
-                    <span>Bookmarks & History</span>
-                  </div>
-                  <div className="drawer-item" onClick={() => { setActiveDrawerTab('safety'); }}>
-                    <Users size={18} />
-                    <span>Safety Circle (Trusted Contacts)</span>
-                  </div>
-
-                  <div className="drawer-item" onClick={() => { setShowOnboarding(true); setIsDrawerOpen(false); }}>
-                    <HelpCircle size={18} />
-                    <span>How to Use / Onboarding</span>
-                  </div>
-                  
-                  <div className="drawer-divider" />
-                  
-                  <div className="drawer-section-title">Account Profiles</div>
-                  {user ? (
-                    <>
-                      <div className="drawer-item" style={{ cursor: 'default' }}>
-                        <User size={18} />
-                        <div>
-                          <strong>{user.username}</strong>
-                          <div style={{ fontSize: '11px', color: 'var(--gm-text-sec)' }}>{user.email}</div>
-                        </div>
-                      </div>
-                      <div className="drawer-item" onClick={() => { logout(); setIsDrawerOpen(false); }}>
-                        <LogOut size={18} color="var(--gm-danger)" />
-                        <span style={{ color: 'var(--gm-danger)' }}>Sign Out</span>
-                      </div>
-                    </>
-                  ) : (
-                    <div className="drawer-item" onClick={() => { setActiveDrawerTab('auth'); }}>
-                      <Lock size={18} />
-                      <span>Sign In / Sign Up</span>
+                  <div className="drawer-item" style={{ cursor: 'default' }}>
+                    <User size={18} />
+                    <div>
+                      <strong>{user.username}</strong>
+                      <div style={{ fontSize: '11px', color: 'var(--gm-text-sec)' }}>{user.email}</div>
                     </div>
-                  )}
+                  </div>
+                  <div className="drawer-item" onClick={() => { logout(); setIsDrawerOpen(false); }}>
+                    <LogOut size={18} color="var(--gm-danger)" />
+                    <span style={{ color: 'var(--gm-danger)' }}>Sign Out</span>
+                  </div>
                 </>
-              )}
-
-              {/* SAFETY CIRCLE (TRUSTED CONTACTS) TAB */}
-              {activeDrawerTab === 'safety' && (
-                <div style={{ padding: '0 20px' }}>
-                  <button className="options-btn" style={{ marginBottom: '16px' }} onClick={() => setActiveDrawerTab('menu')}>
-                    ← Back to Menu
-                  </button>
-                  
-                  <h3 style={{ fontSize: '14px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--gm-text)' }}>
-                    <Users size={16} color="var(--gm-accent)" /> Trusted Guardian Contacts
-                  </h3>
-                  <p style={{ fontSize: '12px', color: 'var(--gm-text-sec)', marginBottom: '16px' }}>
-                    These contacts will be alerted via SMS/Email during SOS emergencies.
-                  </p>
-
-                  {/* List contacts */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                    {trustedContacts.length === 0 ? (
-                      <div style={{ fontSize: '11px', color: 'var(--gm-text-sec)', padding: '12px', border: '1px dashed var(--gm-border)', borderRadius: '4px', textAlign: 'center' }}>
-                        No guardians registered yet.
-                      </div>
-                    ) : (
-                      trustedContacts.map(contact => (
-                        <div key={contact._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px', border: '1px solid var(--gm-border)', borderRadius: '4px', fontSize: '12px' }}>
-                          <div>
-                            <strong style={{ color: 'var(--gm-text)' }}>{contact.name}</strong>
-                            <div style={{ fontSize: '10px', color: 'var(--gm-text-sec)' }}>📞 {contact.phone}</div>
-                          </div>
-                          <button 
-                            style={{ background: 'none', border: 'none', color: 'var(--gm-text-sec)', cursor: 'pointer' }}
-                            onClick={() => deleteTrustedContact(contact._id)}
-                          >
-                            <Trash2 size={13} />
-                          </button>
-                        </div>
-                      ))
-                    )}
-                  </div>
-
-                  {/* Add contact Form */}
-                  <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', backgroundColor: 'var(--gm-hover)', borderRadius: '4px' }}>
-                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: 'var(--gm-text)' }}>Register Guardian</div>
-                    
-                    {!isVerifyingOTP ? (
-                      <>
-                        <input 
-                          type="text" required className="directions-input" placeholder="Name" style={{ backgroundColor: 'var(--gm-bg)', height: '30px', fontSize: '12px' }}
-                          value={contactName} onChange={(e) => setContactName(e.target.value)}
-                        />
-                        <input 
-                          type="text" required className="directions-input" placeholder="Phone" style={{ backgroundColor: 'var(--gm-bg)', height: '30px', fontSize: '12px' }}
-                          value={contactPhone} onChange={(e) => setContactPhone(e.target.value)}
-                        />
-                        <input 
-                          type="email" required className="directions-input" placeholder="Email" style={{ backgroundColor: 'var(--gm-bg)', height: '30px', fontSize: '12px' }}
-                          value={contactEmail} onChange={(e) => setContactEmail(e.target.value)}
-                        />
-                        <button type="submit" className="glass-btn" style={{ background: 'var(--gm-accent)', color: 'white', padding: '6px 12px', fontSize: '11px', width: '100%' }}>
-                          Send Verification Code
-                        </button>
-                      </>
-                    ) : (
-                      <>
-                        <div style={{ fontSize: '11px', color: 'var(--gm-text-sec)' }}>Enter OTP sent to {contactPhone} (Hint: 123456)</div>
-                        <input 
-                          type="text" required className="directions-input" placeholder="Enter 6-digit OTP" style={{ backgroundColor: 'var(--gm-bg)', height: '30px', fontSize: '12px', textAlign: 'center', letterSpacing: '2px' }}
-                          value={enteredOTP} onChange={(e) => setEnteredOTP(e.target.value)}
-                        />
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <button type="button" className="glass-btn-secondary" style={{ flex: 1, padding: '6px 12px', fontSize: '11px' }} onClick={() => { setIsVerifyingOTP(false); setEnteredOTP(''); }}>
-                            Cancel
-                          </button>
-                          <button type="submit" className="glass-btn" style={{ flex: 1, background: 'var(--gm-safe)', color: 'white', padding: '6px 12px', fontSize: '11px' }}>
-                            Verify & Add
-                          </button>
-                        </div>
-                      </>
-                    )}
-                  </form>
-                </div>
-              )}
-
-              {/* BOOKMARKS HISTORY TAB */}
-              {activeDrawerTab === 'history' && (
-                <div style={{ padding: '0 20px' }}>
-                  <button className="options-btn" style={{ marginBottom: '16px' }} onClick={() => setActiveDrawerTab('menu')}>
-                    ← Back to Menu
-                  </button>
-                  
-                  <h3 style={{ fontSize: '14px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--gm-text)' }}>
-                    <Bookmark size={16} color="var(--gm-accent)" /> Saved Routes
-                  </h3>
-
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    {savedRoutes.length === 0 ? (
-                      <div style={{ fontSize: '11px', color: 'var(--gm-text-sec)', textAlign: 'center', padding: '12px' }}>
-                        Bookmarked paths will show here.
-                      </div>
-                    ) : (
-                      savedRoutes.map(rt => (
-                        <div 
-                          key={rt._id}
-                          style={{ padding: '10px', border: '1px solid var(--gm-border)', borderRadius: '4px', fontSize: '12px', cursor: 'pointer', backgroundColor: 'var(--gm-bg)' }}
-                          onClick={() => {
-                            setSource({ lat: rt.sourceCoords.lat, lng: rt.sourceCoords.lng, name: rt.sourceName });
-                            setDestination({ lat: rt.destCoords.lat, lng: rt.destCoords.lng, name: rt.destName });
-                            setIsDirectionsActive(true);
-                            setIsDrawerOpen(false);
-                            setTimeout(() => {
-                              fetchRoutes(
-                                { lat: rt.sourceCoords.lat, lng: rt.sourceCoords.lng },
-                                { lat: rt.destCoords.lat, lng: rt.destCoords.lng },
-                                hour
-                              );
-                            }, 100);
-                          }}
-                        >
-                          <strong style={{ color: 'var(--gm-text)' }}>{rt.name}</strong>
-                          <div style={{ fontSize: '10px', color: 'var(--gm-text-sec)', marginTop: '2px' }}>
-                            {rt.sourceName.split(',')[0]} ➔ {rt.destName.split(',')[0]}
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
-                </div>
-              )}
-
-              {/* AUTH TAB */}
-              {activeDrawerTab === 'auth' && (
-                <div style={{ padding: '0 24px', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                  <button className="options-btn" style={{ marginBottom: '20px', alignSelf: 'flex-start', fontSize: '13px' }} onClick={() => setActiveDrawerTab('menu')}>
-                    ← Back to Menu
-                  </button>
-
-                  <div className="auth-title-container" style={{ textAlign: 'center', marginBottom: '28px' }}>
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      width: '54px',
-                      height: '54px',
-                      borderRadius: '50%',
-                      background: 'linear-gradient(135deg, var(--gm-accent), #4285f4)',
-                      boxShadow: '0 4px 12px rgba(66, 133, 244, 0.35)',
-                      marginBottom: '12px'
-                    }}>
-                      <Shield size={26} color="white" fill="white" />
-                    </div>
-                    <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0', color: 'var(--gm-text)', letterSpacing: '-0.5px' }}>
-                      {isRegistering ? 'Create Account' : 'Welcome Back'}
-                    </h2>
-                    <p style={{ fontSize: '13px', color: 'var(--gm-text-sec)', margin: '6px 0 0 0' }}>
-                      {isRegistering ? 'Join SafePath to secure your routes' : 'Sign in to access your saved places'}
-                    </p>
-                  </div>
-
-                  {/* Modern Tab Selector */}
-                  <div style={{
-                    display: 'flex',
-                    background: 'var(--gm-hover)',
-                    borderRadius: '10px',
-                    padding: '4px',
-                    marginBottom: '24px',
-                    border: '1px solid var(--gm-border)'
-                  }}>
-                    <button
-                      type="button"
-                      style={{
-                        flex: 1,
-                        padding: '10px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        border: 'none',
-                        borderRadius: '8px',
-                        background: !isRegistering ? 'var(--gm-bg)' : 'transparent',
-                        color: !isRegistering ? 'var(--gm-accent)' : 'var(--gm-text-sec)',
-                        boxShadow: !isRegistering ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onClick={() => setIsRegistering(false)}
-                    >
-                      Sign In
-                    </button>
-                    <button
-                      type="button"
-                      style={{
-                        flex: 1,
-                        padding: '10px',
-                        fontSize: '13px',
-                        fontWeight: '600',
-                        border: 'none',
-                        borderRadius: '8px',
-                        background: isRegistering ? 'var(--gm-bg)' : 'transparent',
-                        color: isRegistering ? 'var(--gm-accent)' : 'var(--gm-text-sec)',
-                        boxShadow: isRegistering ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease'
-                      }}
-                      onClick={() => setIsRegistering(true)}
-                    >
-                      Sign Up
-                    </button>
-                  </div>
-
-                  {authError && (
-                    <div style={{ 
-                      padding: '12px 14px', 
-                      color: 'var(--gm-danger)', 
-                      backgroundColor: 'rgba(217,48,37,0.08)', 
-                      border: '1px solid rgba(217,48,37,0.2)', 
-                      borderRadius: '8px', 
-                      fontSize: '12px', 
-                      marginBottom: '20px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '8px'
-                    }}>
-                      <AlertTriangle size={16} style={{ flexShrink: 0 }} />
-                      <span>{authError}</span>
-                    </div>
-                  )}
-
-                  <form className="auth-form-container" onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                    {isRegistering && (
-                      <div style={{ position: 'relative' }}>
-                        <User size={18} color="var(--gm-text-sec)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
-                        <input 
-                          type="text" 
-                          required 
-                          placeholder="Choose Username" 
-                          style={{ 
-                            width: '100%',
-                            padding: '12px 14px 12px 42px',
-                            backgroundColor: 'var(--gm-hover)',
-                            border: '1px solid var(--gm-border)',
-                            borderRadius: '10px',
-                            fontSize: '14px',
-                            color: 'var(--gm-text)',
-                            outline: 'none',
-                            transition: 'border-color 0.2s'
-                          }}
-                          value={authUsername} 
-                          onChange={(e) => setAuthUsername(e.target.value)}
-                        />
-                      </div>
-                    )}
-
-                    <div style={{ position: 'relative' }}>
-                      <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', color: 'var(--gm-text-sec)', fontSize: '16px', fontWeight: 'bold' }}>@</span>
-                      <input 
-                        type="email" 
-                        required 
-                        placeholder="Email Address" 
-                        style={{ 
-                          width: '100%',
-                          padding: '12px 14px 12px 42px',
-                          backgroundColor: 'var(--gm-hover)',
-                          border: '1px solid var(--gm-border)',
-                          borderRadius: '10px',
-                          fontSize: '14px',
-                          color: 'var(--gm-text)',
-                          outline: 'none',
-                          transition: 'border-color 0.2s'
-                        }}
-                        value={authEmail} 
-                        onChange={(e) => setAuthEmail(e.target.value)}
-                      />
-                    </div>
-
-                    <div style={{ position: 'relative' }}>
-                      <Lock size={18} color="var(--gm-text-sec)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
-                      <input 
-                        type="password" 
-                        required 
-                        placeholder="Password" 
-                        style={{ 
-                          width: '100%',
-                          padding: '12px 14px 12px 42px',
-                          backgroundColor: 'var(--gm-hover)',
-                          border: '1px solid var(--gm-border)',
-                          borderRadius: '10px',
-                          fontSize: '14px',
-                          color: 'var(--gm-text)',
-                          outline: 'none',
-                          transition: 'border-color 0.2s'
-                        }}
-                        value={authPass} 
-                        onChange={(e) => setAuthPass(e.target.value)}
-                      />
-                    </div>
-
-                    <button 
-                      type="submit" 
-                      className="glass-btn" 
-                      style={{ 
-                        background: 'linear-gradient(135deg, var(--gm-accent), #2b7de9)', 
-                        color: 'white', 
-                        padding: '14px', 
-                        fontSize: '14px', 
-                        fontWeight: 'bold',
-                        width: '100%',
-                        borderRadius: '10px',
-                        border: 'none',
-                        boxShadow: '0 4px 12px rgba(26, 115, 232, 0.2)',
-                        cursor: 'pointer',
-                        marginTop: '8px',
-                        transition: 'transform 0.1s ease'
-                      }}
-                    >
-                      {isRegistering ? 'Create Secure Account' : 'Secure Sign In'}
-                    </button>
-                  </form>
+              ) : (
+                <div className="drawer-item" onClick={() => { setIsDrawerOpen(false); setShowAuthModal(true); }}>
+                  <Lock size={18} />
+                  <span>Sign In / Sign Up</span>
                 </div>
               )}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 1. SAFETY CIRCLE MODAL (Trusted Contacts) */}
+      {showSafetyModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(9, 6, 22, 0.65)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }} onClick={() => { setIsVerifyingOTP(false); setShowSafetyModal(false); }}>
+          <div className="glass-panel animate-fade-in" style={{
+            width: '100%', maxWidth: '440px', padding: '26px', position: 'relative',
+            backgroundColor: 'var(--gm-bg)', color: 'var(--gm-text)', border: '1px solid var(--gm-border)', borderRadius: '24px'
+          }} onClick={(e) => e.stopPropagation()}>
+            
+            {/* Close Button */}
+            <button 
+              style={{ position: 'absolute', right: '16px', top: '16px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gm-text-sec)' }}
+              onClick={() => { setIsVerifyingOTP(false); setShowSafetyModal(false); }}
+            >
+              <X size={20} />
+            </button>
+
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--gm-text)' }}>
+              <Users size={22} color="var(--gm-accent)" /> Safety Circle
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--gm-text-sec)', marginBottom: '20px' }}>
+              These contacts will be alerted via SMS and Email during SOS emergencies.
+            </p>
+
+            {/* List Contacts */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
+              {trustedContacts.length === 0 ? (
+                <div style={{ fontSize: '12px', color: 'var(--gm-text-sec)', padding: '16px', border: '1px dashed var(--gm-border)', borderRadius: '12px', textAlign: 'center' }}>
+                  No guardians registered yet.
+                </div>
+              ) : (
+                trustedContacts.map(contact => (
+                  <div key={contact._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 14px', border: '1px solid var(--gm-border)', borderRadius: '12px', fontSize: '13px', backgroundColor: 'var(--gm-hover)' }}>
+                    <div>
+                      <strong style={{ color: 'var(--gm-text)' }}>{contact.name}</strong>
+                      <div style={{ fontSize: '11px', color: 'var(--gm-text-sec)', marginTop: '2px' }}>📞 {contact.phone}</div>
+                    </div>
+                    <button 
+                      style={{ background: 'none', border: 'none', color: 'var(--gm-danger)', cursor: 'pointer', padding: '6px', display: 'flex', alignItems: 'center' }}
+                      onClick={() => deleteTrustedContact(contact._id)}
+                      title="Remove Contact"
+                    >
+                      <Trash2 size={15} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Add Contact Form */}
+            {user ? (
+              <form onSubmit={handleContactSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px', padding: '16px', backgroundColor: 'var(--gm-hover)', borderRadius: '16px', border: '1px solid var(--gm-border)' }}>
+                <div style={{ fontSize: '13px', fontWeight: 'bold', color: 'var(--gm-text)' }}>Register New Guardian</div>
+                
+                {!isVerifyingOTP ? (
+                  <>
+                    <input 
+                      type="text" required className="directions-input" placeholder="Name" style={{ backgroundColor: 'var(--gm-bg)', height: '36px', fontSize: '13px' }}
+                      value={contactName} onChange={(e) => setContactName(e.target.value)}
+                    />
+                    <input 
+                      type="text" required className="directions-input" placeholder="Phone" style={{ backgroundColor: 'var(--gm-bg)', height: '36px', fontSize: '13px' }}
+                      value={contactPhone} onChange={(e) => setContactPhone(e.target.value)}
+                    />
+                    <input 
+                      type="email" required className="directions-input" placeholder="Email" style={{ backgroundColor: 'var(--gm-bg)', height: '36px', fontSize: '13px' }}
+                      value={contactEmail} onChange={(e) => setContactEmail(e.target.value)}
+                    />
+                    <button type="submit" className="glass-btn" style={{ background: 'linear-gradient(135deg, var(--gm-accent), #2b7de9)', color: 'white', padding: '10px 16px', fontSize: '13px', fontWeight: 'bold', width: '100%', borderRadius: '10px', border: 'none', cursor: 'pointer', marginTop: '4px' }}>
+                      Send Verification Code
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div style={{ fontSize: '12px', color: 'var(--gm-text-sec)', lineHeight: '1.4' }}>
+                      Enter 6-digit OTP code sent to {contactPhone} (Hint: use <strong>123456</strong> if running in simulation)
+                    </div>
+                    <input 
+                      type="text" required className="directions-input" placeholder="Enter OTP" style={{ backgroundColor: 'var(--gm-bg)', height: '38px', fontSize: '14px', textAlign: 'center', letterSpacing: '4px', fontWeight: 'bold' }}
+                      value={enteredOTP} onChange={(e) => setEnteredOTP(e.target.value)}
+                    />
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                      <button type="button" className="glass-btn-secondary" style={{ flex: 1, padding: '10px 14px', fontSize: '12px', borderRadius: '10px', cursor: 'pointer' }} onClick={() => { setIsVerifyingOTP(false); setEnteredOTP(''); }}>
+                        Cancel
+                      </button>
+                      <button type="submit" className="glass-btn" style={{ flex: 1, background: 'var(--gm-safe)', color: 'white', padding: '10px 14px', fontSize: '12px', border: 'none', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                        Verify & Add
+                      </button>
+                    </div>
+                  </>
+                )}
+              </form>
+            ) : (
+              <div style={{ fontSize: '12px', color: 'var(--gm-text-sec)', padding: '12px', backgroundColor: 'var(--gm-hover)', borderRadius: '12px', textAlign: 'center', border: '1px solid var(--gm-border)' }}>
+                🔒 Please <span style={{ color: 'var(--gm-accent)', fontWeight: 'bold', cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { setShowSafetyModal(false); setShowAuthModal(true); }}>Sign In</span> to register emergency contacts.
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* 2. BOOKMARKS & HISTORY MODAL */}
+      {showHistoryModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(9, 6, 22, 0.65)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }} onClick={() => setShowHistoryModal(false)}>
+          <div className="glass-panel animate-fade-in" style={{
+            width: '100%', maxWidth: '440px', padding: '26px', position: 'relative',
+            backgroundColor: 'var(--gm-bg)', color: 'var(--gm-text)', border: '1px solid var(--gm-border)', borderRadius: '24px'
+          }} onClick={(e) => e.stopPropagation()}>
+            
+            {/* Close Button */}
+            <button 
+              style={{ position: 'absolute', right: '16px', top: '16px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gm-text-sec)' }}
+              onClick={() => setShowHistoryModal(false)}
+            >
+              <X size={20} />
+            </button>
+
+            <h3 style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--gm-text)' }}>
+              <Bookmark size={22} color="var(--gm-accent)" /> Bookmarks & History
+            </h3>
+            <p style={{ fontSize: '13px', color: 'var(--gm-text-sec)', marginBottom: '20px' }}>
+              Your saved favorite safe routes for quick planning.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', maxHeight: '300px', overflowY: 'auto', paddingRight: '4px' }}>
+              {savedRoutes.length === 0 ? (
+                <div style={{ fontSize: '12px', color: 'var(--gm-text-sec)', padding: '24px', border: '1px dashed var(--gm-border)', borderRadius: '12px', textAlign: 'center' }}>
+                  Saved favorite paths will show here. Get directions and click "Bookmark" to save.
+                </div>
+              ) : (
+                savedRoutes.map(rt => (
+                  <div 
+                    key={rt._id}
+                    className="suggestion-item"
+                    style={{ 
+                      padding: '12px 14px', border: '1px solid var(--gm-border)', borderRadius: '12px', 
+                      cursor: 'pointer', backgroundColor: 'var(--gm-hover)', display: 'flex', flexDirection: 'column', gap: '4px',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onClick={() => {
+                      setSource({ lat: rt.sourceCoords.lat, lng: rt.sourceCoords.lng, name: rt.sourceName });
+                      setDestination({ lat: rt.destCoords.lat, lng: rt.destCoords.lng, name: rt.destName });
+                      setIsDirectionsActive(true);
+                      setShowHistoryModal(false);
+                      setTimeout(() => {
+                        fetchRoutes(
+                          { lat: rt.sourceCoords.lat, lng: rt.sourceCoords.lng },
+                          { lat: rt.destCoords.lat, lng: rt.destCoords.lng },
+                          hour
+                        );
+                      }, 100);
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <strong style={{ color: 'var(--gm-text)', fontSize: '14px' }}>{rt.name}</strong>
+                      <span className="route-badge badge-safest" style={{ fontSize: '10px', padding: '2px 6px' }}>{rt.safetyScore}% Safe</span>
+                    </div>
+                    <div style={{ fontSize: '11px', color: 'var(--gm-text-sec)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span>From: {rt.sourceName.split(',')[0]}</span>
+                      <span>➔</span>
+                      <span>To: {rt.destName.split(',')[0]}</span>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 3. SIGN IN / SIGN UP MODAL (AUTH) */}
+      {showAuthModal && (
+        <div style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          background: 'rgba(9, 6, 22, 0.65)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)',
+          zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px'
+        }} onClick={() => { setAuthError(null); setShowAuthModal(false); }}>
+          <div className="glass-panel animate-fade-in" style={{
+            width: '100%', maxWidth: '400px', padding: '30px', position: 'relative',
+            backgroundColor: 'var(--gm-bg)', color: 'var(--gm-text)', border: '1px solid var(--gm-border)', borderRadius: '24px',
+            boxShadow: 'var(--gm-shadow)'
+          }} onClick={(e) => e.stopPropagation()}>
+            
+            {/* Close Button */}
+            <button 
+              style={{ position: 'absolute', right: '16px', top: '16px', background: 'none', border: 'none', cursor: 'pointer', color: 'var(--gm-text-sec)' }}
+              onClick={() => { setAuthError(null); setShowAuthModal(false); }}
+            >
+              <X size={20} />
+            </button>
+
+            <div className="auth-title-container" style={{ textAlign: 'center', marginBottom: '24px' }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: '54px', height: '54px', borderRadius: '50%',
+                background: 'linear-gradient(135deg, var(--gm-accent), #4285f4)',
+                boxShadow: '0 4px 12px rgba(66, 133, 244, 0.35)', marginBottom: '12px'
+              }}>
+                <Shield size={26} color="white" fill="white" />
+              </div>
+              <h2 style={{ fontSize: '20px', fontWeight: 'bold', margin: '0', color: 'var(--gm-text)', letterSpacing: '-0.5px' }}>
+                {isRegistering ? 'Create Account' : 'Welcome Back'}
+              </h2>
+              <p style={{ fontSize: '13px', color: 'var(--gm-text-sec)', margin: '6px 0 0 0' }}>
+                {isRegistering ? 'Join SafePath to secure your routes' : 'Sign in to access your saved places'}
+              </p>
+            </div>
+
+            {/* Modern Tab Selector */}
+            <div style={{
+              display: 'flex', background: 'var(--gm-hover)', borderRadius: '10px', padding: '4px',
+              marginBottom: '20px', border: '1px solid var(--gm-border)'
+            }}>
+              <button
+                type="button"
+                style={{
+                  flex: 1, padding: '10px', fontSize: '13px', fontWeight: '600', border: 'none', borderRadius: '8px',
+                  background: !isRegistering ? 'var(--gm-bg)' : 'transparent',
+                  color: !isRegistering ? 'var(--gm-accent)' : 'var(--gm-text-sec)',
+                  boxShadow: !isRegistering ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+                onClick={() => setIsRegistering(false)}
+              >
+                Sign In
+              </button>
+              <button
+                type="button"
+                style={{
+                  flex: 1, padding: '10px', fontSize: '13px', fontWeight: '600', border: 'none', borderRadius: '8px',
+                  background: isRegistering ? 'var(--gm-bg)' : 'transparent',
+                  color: isRegistering ? 'var(--gm-accent)' : 'var(--gm-text-sec)',
+                  boxShadow: isRegistering ? '0 2px 4px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer', transition: 'all 0.2s ease'
+                }}
+                onClick={() => setIsRegistering(true)}
+              >
+                Sign Up
+              </button>
+            </div>
+
+            {authError && (
+              <div style={{ 
+                padding: '12px 14px', color: 'var(--gm-danger)', backgroundColor: 'rgba(217,48,37,0.08)', 
+                border: '1px solid rgba(217,48,37,0.2)', borderRadius: '8px', fontSize: '12px', marginBottom: '16px',
+                display: 'flex', alignItems: 'center', gap: '8px'
+              }}>
+                <AlertTriangle size={16} style={{ flexShrink: 0 }} />
+                <span>{authError}</span>
+              </div>
+            )}
+
+            <form className="auth-form-container" onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              {isRegistering && (
+                <div style={{ position: 'relative' }}>
+                  <User size={18} color="var(--gm-text-sec)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                  <input 
+                    type="text" required placeholder="Choose Username" 
+                    style={{ 
+                      width: '100%', padding: '12px 14px 12px 42px', backgroundColor: 'var(--gm-hover)',
+                      border: '1px solid var(--gm-border)', borderRadius: '10px', fontSize: '14px', color: 'var(--gm-text)',
+                      outline: 'none', transition: 'border-color 0.2s'
+                    }}
+                    value={authUsername} onChange={(e) => setAuthUsername(e.target.value)}
+                  />
+                </div>
+              )}
+
+              <div style={{ position: 'relative' }}>
+                <span style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', display: 'flex', alignItems: 'center', color: 'var(--gm-text-sec)', fontSize: '16px', fontWeight: 'bold' }}>@</span>
+                <input 
+                  type="email" required placeholder="Email Address" 
+                  style={{ 
+                    width: '100%', padding: '12px 14px 12px 42px', backgroundColor: 'var(--gm-hover)',
+                    border: '1px solid var(--gm-border)', borderRadius: '10px', fontSize: '14px', color: 'var(--gm-text)',
+                    outline: 'none', transition: 'border-color 0.2s'
+                  }}
+                  value={authEmail} onChange={(e) => setAuthEmail(e.target.value)}
+                />
+              </div>
+
+              <div style={{ position: 'relative' }}>
+                <Lock size={18} color="var(--gm-text-sec)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input 
+                  type="password" required placeholder="Password" 
+                  style={{ 
+                    width: '100%', padding: '12px 14px 12px 42px', backgroundColor: 'var(--gm-hover)',
+                    border: '1px solid var(--gm-border)', borderRadius: '10px', fontSize: '14px', color: 'var(--gm-text)',
+                    outline: 'none', transition: 'border-color 0.2s'
+                  }}
+                  value={authPass} onChange={(e) => setAuthPass(e.target.value)}
+                />
+              </div>
+
+              <button 
+                type="submit" className="glass-btn" 
+                style={{ 
+                  background: 'linear-gradient(135deg, var(--gm-accent), #2b7de9)', color: 'white', 
+                  padding: '14px', fontSize: '14px', fontWeight: 'bold', width: '100%',
+                  borderRadius: '10px', border: 'none', boxShadow: '0 4px 12px rgba(26, 115, 232, 0.2)',
+                  cursor: 'pointer', marginTop: '8px', transition: 'transform 0.1s ease'
+                }}
+              >
+                {isRegistering ? 'Create Secure Account' : 'Secure Sign In'}
+              </button>
+            </form>
           </div>
         </div>
       )}
