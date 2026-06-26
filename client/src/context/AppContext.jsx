@@ -3,7 +3,7 @@ import confetti from 'canvas-confetti';
 
 export const AppContext = createContext();
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+const API_BASE = import.meta.env.VITE_API_URL || (window.location.origin.includes('localhost') ? 'http://localhost:4000/api' : '/api');
 
 export const AppProvider = ({ children }) => {
   const [user, setUser] = useState(null);

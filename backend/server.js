@@ -32,7 +32,11 @@ app.get('/health', (req, res) => {
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () => {
-  console.log(`\n🚀 SafePath AI backend running on port ${PORT}`);
-  console.log(`🔗 API Health: http://localhost:${PORT}/health\n`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n🚀 SafePath AI backend running on port ${PORT}`);
+    console.log(`🔗 API Health: http://localhost:${PORT}/health\n`);
+  });
+}
+
+module.exports = app;
