@@ -18,7 +18,7 @@ if (process.env.SMTP_USER && process.env.SMTP_USER !== 'your_email@gmail.com' &&
     }
   };
   
-  if (process.env.SMTP_HOST) {
+  if (process.env.SMTP_HOST && process.env.SMTP_HOST !== 'smtp.gmail.com') {
     transporterConfig.host = process.env.SMTP_HOST;
     transporterConfig.port = parseInt(process.env.SMTP_PORT || '587');
     transporterConfig.secure = process.env.SMTP_SECURE === 'true' || transporterConfig.port === 465;
