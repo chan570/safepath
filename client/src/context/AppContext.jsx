@@ -194,7 +194,8 @@ export const AppProvider = ({ children }) => {
         setTimeout(() => setSuccessMsg(null), 3500);
         return { success: true, isSimulated: data.isSimulated };
       } else {
-        return { success: false, msg: data.msg || 'Failed to send verification code.' };
+        const errorMsg = data.msg || (data.error ? `${data.error} (${data.details || ''})` : 'Failed to send verification code.');
+        return { success: false, msg: errorMsg };
       }
     } catch (err) {
       console.error("Failed to send OTP:", err);
