@@ -2,7 +2,9 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = path.join(__dirname, 'data');
+const DATA_DIR = process.env.VERCEL
+  ? path.join('/tmp', 'data')
+  : path.join(__dirname, 'data');
 const JSON_DB_PATH = path.join(DATA_DIR, 'db.json');
 
 let useLocalFallback = false;
