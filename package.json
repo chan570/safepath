@@ -2,7 +2,7 @@
   "name": "safepath-root",
   "version": "1.0.0",
   "scripts": {
-    "build": "cd client && npm install && npm run build && cd .. && cp -rf client/dist/* ."
+    "build": "cd client && npm install && npm run build && cd .. && mkdir -p dist && cp -rf client/dist/* dist/"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
