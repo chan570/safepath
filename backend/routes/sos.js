@@ -3,18 +3,7 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const { db } = require('../dbConnect');
 const jwt = require('jsonwebtoken');
-const twilio = require('twilio');
 const nodemailer = require('nodemailer');
-
-// Initialize Twilio conditionally
-let twilioClient = null;
-if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_ACCOUNT_SID !== 'your_twilio_account_sid_here' &&
-    process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_AUTH_TOKEN !== 'your_twilio_auth_token_here') {
-  twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-  console.log("Twilio SMS Client initialized successfully.");
-} else {
-  console.log("Twilio credentials missing. Running in Simulated SMS mode.");
-}
 
 // Initialize Nodemailer transporter conditionally
 let emailTransporter = null;
@@ -60,46 +49,6 @@ router.post('/trigger', async (req, res) => {
     // This prevents delivery bounces from fake domains like dispatch@police.gov.
 
     const mapLink = `https://www.google.com/maps/search/?api=1&query=${location.lat},${location.lng}`;
-    
-    // Broadcast SMS alerts (Real or Simulated)
-    const smsBroadcasts = await Promise.all(contacts.map(async (contact) => {
-      const message = `🚨 EMERGENCY SOS! 🚨\nYour trusted contact ${username} is in distress!\nLast known location: ${mapLink}\nPlease check on them immediately!`;
-      
-      if (twilioClient && process.env.TWILIO_PHONE_NUMBER && process.env.TWILIO_PHONE_NUMBER !== 'your_twilio_phone_number_here') {
-        try {
-          const response = await twilioClient.messages.create({
-            body: message,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: contact.phone
-          });
-          return {
-            recipientName: contact.name,
-            recipientPhone: contact.phone,
-            status: 'Sent (Real SMS)',
-            messageId: response.sid
-          };
-        } catch (err) {
-          console.error(`Real SMS sending failed to ${contact.name}:`, err.message);
-          return {
-            recipientName: contact.name,
-            recipientPhone: contact.phone,
-            status: 'Failed (Real SMS)',
-            error: err.message
-          };
-        }
-      } else {
-        console.log(`\n================= SIMULATED SMS BROADCAST =================`);
-        console.log(`TO: ${contact.name} (${contact.phone})`);
-        console.log(`MESSAGE:\n${message}`);
-        console.log(`===========================================================\n`);
-        return {
-          recipientName: contact.name,
-          recipientPhone: contact.phone,
-          message,
-          status: 'Sent (Simulated)'
-        };
-      }
-    }));
 
     // Broadcast Email alerts (Real or Simulated)
     const emailBroadcasts = await Promise.all(contacts.map(async (contact) => {
@@ -149,7 +98,6 @@ router.post('/trigger', async (req, res) => {
       username,
       location,
       contactsNotifiedCount: contacts.length,
-      smsBroadcasts,
       emailBroadcasts,
       timestamp: new Date().toISOString()
     });
@@ -161,7 +109,7 @@ router.post('/trigger', async (req, res) => {
 });
 
 // @route   POST api/sos/share-route
-// @desc    Simulate/Send sharing live location SMS with guardians
+// @desc    Simulate/Send sharing live location email with guardians
 router.post('/share-route', async (req, res) => {
   const { route } = req.body;
   const token = req.header('x-auth-token');
@@ -183,39 +131,52 @@ router.post('/share-route', async (req, res) => {
     // This prevents delivery bounces and fake Twilio calls.
 
     const destName = route && route.destination ? route.destination.name : "their destination";
-    const message = `${username} has started a route to ${destName}. Track their live location and safety status here: https://safepath.ai/track/simulated-link`;
+    const subject = `SafePath AI - ${username} shared a live route`;
+    const body = `Hello,
 
-    const smsBroadcasts = await Promise.all(contacts.map(async (c) => {
-      if (twilioClient && process.env.TWILIO_PHONE_NUMBER && process.env.TWILIO_PHONE_NUMBER !== 'your_twilio_phone_number_here') {
+This is an automated notification from SafePath AI.
+
+Your trusted contact, ${username}, has started a route to ${destName}.
+
+You can track their live location and safety status here:
+https://safepath.ai/track/simulated-link
+
+Best Regards,
+SafePath AI Safety Team`;
+
+    const emailBroadcasts = await Promise.all(contacts.map(async (contact) => {
+      if (emailTransporter) {
         try {
-          const response = await twilioClient.messages.create({
-            body: message,
-            from: process.env.TWILIO_PHONE_NUMBER,
-            to: c.phone
+          const info = await emailTransporter.sendMail({
+            from: `"SafePath AI" <${process.env.SMTP_USER}>`,
+            to: contact.email,
+            subject,
+            text: body
           });
           return {
-            recipientName: c.name,
-            recipientPhone: c.phone,
-            status: 'Sent (Real SMS)',
-            messageId: response.sid
+            recipientName: contact.name,
+            recipientEmail: contact.email,
+            status: 'Sent (Real Email)',
+            messageId: info.messageId
           };
         } catch (err) {
-          console.error(`Live Location SMS to ${c.name} failed:`, err.message);
+          console.error(`Live Location Email to ${contact.name} failed:`, err.message);
           return {
-            recipientName: c.name,
-            recipientPhone: c.phone,
-            status: 'Failed (Real SMS)',
+            recipientName: contact.name,
+            recipientEmail: contact.email,
+            status: 'Failed (Real Email)',
             error: err.message
           };
         }
       } else {
-        console.log(`\n============== SIMULATED LIVE LOCATION SMS ==============`);
-        console.log(`TO: ${c.name} (${c.phone})`);
-        console.log(`MESSAGE: ${message}`);
+        console.log(`\n============== SIMULATED LIVE LOCATION EMAIL ==============`);
+        console.log(`TO: ${contact.email}`);
+        console.log(`SUBJECT: ${subject}`);
+        console.log(`BODY:\n${body}`);
         console.log(`===========================================================\n`);
         return {
-          recipientName: c.name,
-          recipientPhone: c.phone,
+          recipientName: contact.name,
+          recipientEmail: contact.email,
           status: 'Sent (Simulated)'
         };
       }
@@ -224,7 +185,7 @@ router.post('/share-route', async (req, res) => {
     res.json({
       success: true,
       contactsNotifiedCount: contacts.length,
-      smsBroadcasts
+      emailBroadcasts
     });
   } catch (err) {
     console.error("Live location share failed:", err.message);

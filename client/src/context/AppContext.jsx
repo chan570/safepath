@@ -177,7 +177,7 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const sendGuardianOTP = async (phone) => {
+  const sendGuardianOTP = async (email) => {
     if (!token) return { success: false, msg: 'User session not active' };
     try {
       const res = await fetch(`${API_BASE}/auth/contacts/send-otp`, {
@@ -186,11 +186,11 @@ export const AppProvider = ({ children }) => {
           'Content-Type': 'application/json',
           'x-auth-token': token
         },
-        body: JSON.stringify({ phone })
+        body: JSON.stringify({ email })
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        setSuccessMsg(data.isSimulated ? "Simulated OTP code logged in backend console!" : "Verification code successfully texted to guardian!");
+        setSuccessMsg(data.isSimulated ? "Simulated OTP code logged in backend console!" : "Verification code successfully emailed to guardian!");
         setTimeout(() => setSuccessMsg(null), 3500);
         return { success: true, isSimulated: data.isSimulated };
       } else {
@@ -481,7 +481,7 @@ export const AppProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json();
         setSosLog(data);
-        setSuccessMsg(`SOS Alert Active! SMS & Emails sent to ${data.contactsNotifiedCount} guardians.`);
+        setSuccessMsg(`SOS Alert Active! Email alerts sent to ${data.contactsNotifiedCount} guardians.`);
         setTimeout(() => setSuccessMsg(null), 4000);
       }
     } catch (err) {
@@ -492,12 +492,12 @@ export const AppProvider = ({ children }) => {
         username: user ? user.username : 'SafePath User',
         location: coords,
         contactsNotifiedCount: 2,
-        smsBroadcasts: [
-          { recipientName: 'Emergency Backup', recipientPhone: '112/100', status: 'Sent (Local Sim)' }
+        emailBroadcasts: [
+          { recipientName: 'Emergency Backup', recipientEmail: 'backup@example.com', status: 'Sent (Local Sim)' }
         ],
         timestamp: new Date().toISOString()
       });
-      setSuccessMsg("SOS Alert Active! SMS dispatched via local fallback.");
+      setSuccessMsg("SOS Alert Active! Email alerts dispatched via local fallback.");
       setTimeout(() => setSuccessMsg(null), 4000);
     }
   };
@@ -514,14 +514,14 @@ export const AppProvider = ({ children }) => {
       if (res.ok) {
         const data = await res.json();
         setTimeout(() => {
-          setSuccessMsg(`Live Location SMS successfully dispatched to ${data.contactsNotifiedCount} guardians!`);
+          setSuccessMsg(`Live Location Email successfully dispatched to ${data.contactsNotifiedCount} guardians!`);
           setTimeout(() => setSuccessMsg(null), 3500);
         }, 1500);
       }
     } catch (err) {
       console.error("Failed to share location:", err);
       setTimeout(() => {
-        setSuccessMsg(`Live Location SMS successfully dispatched (Simulated Fallback)`);
+        setSuccessMsg(`Live Location Email successfully dispatched (Simulated Fallback)`);
         setTimeout(() => setSuccessMsg(null), 3500);
       }, 1500);
     }

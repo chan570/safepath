@@ -218,7 +218,7 @@ export default function Sidebar() {
 
     if (!isVerifyingOTP) {
       // Step 1: Send OTP via backend
-      const res = await sendGuardianOTP(contactPhone);
+      const res = await sendGuardianOTP(contactEmail);
       if (res.success) {
         setIsVerifyingOTP(true);
       } else {
@@ -874,7 +874,7 @@ export default function Sidebar() {
               <Users size={22} color="var(--gm-accent)" /> Safety Circle
             </h3>
             <p style={{ fontSize: '13px', color: 'var(--gm-text-sec)', marginBottom: '20px' }}>
-              These contacts will be alerted via SMS and Email during SOS emergencies.
+              These contacts will be alerted via Email during SOS emergencies.
             </p>
 
             {/* List Contacts */}
@@ -928,7 +928,7 @@ export default function Sidebar() {
                 ) : (
                   <>
                     <div style={{ fontSize: '12px', color: 'var(--gm-text-sec)', lineHeight: '1.4' }}>
-                      Enter 6-digit OTP code sent to {contactPhone} (Hint: use <strong>123456</strong> if running in simulation)
+                      Enter 6-digit OTP code sent to {contactEmail} (Hint: use <strong>123456</strong> if running in simulation)
                     </div>
                     <input 
                       type="text" required className="directions-input" placeholder="Enter OTP" style={{ backgroundColor: 'var(--gm-bg)', height: '38px', fontSize: '14px', textAlign: 'center', letterSpacing: '4px', fontWeight: 'bold' }}
@@ -1211,7 +1211,7 @@ export default function Sidebar() {
       {isSOSActive && sosCountdown === 0 && (
         <div className="floating-sos-overlay" style={{ zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
           <div style={{ backgroundColor: 'var(--gm-danger)', color: 'white', padding: '8px 16px', borderRadius: '16px', fontSize: '14px', fontWeight: 'bold', boxShadow: '0 4px 12px rgba(217, 48, 37, 0.4)', animation: 'sos-pulse 1s infinite' }}>
-            📍 Live Location Shared via SMS
+            📍 Live Location Shared via Email
           </div>
           <button 
             className="glass-btn" 

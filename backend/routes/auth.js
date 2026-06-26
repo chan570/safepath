@@ -4,21 +4,33 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const auth = require('../middleware/auth');
 const { db } = require('../dbConnect');
-const twilio = require('twilio');
+const nodemailer = require('nodemailer');
 
-// Initialize Twilio Verify conditionally
-let twilioVerifyClient = null;
-let verifyServiceSid = null;
-
-if (process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_ACCOUNT_SID !== 'your_twilio_account_sid_here' &&
-    process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_AUTH_TOKEN !== 'your_twilio_auth_token_here' &&
-    process.env.TWILIO_VERIFY_SERVICE_SID && process.env.TWILIO_VERIFY_SERVICE_SID !== 'your_twilio_verify_service_sid_here') {
-  twilioVerifyClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
-  verifyServiceSid = process.env.TWILIO_VERIFY_SERVICE_SID;
-  console.log("Twilio Verify client initialized successfully.");
+// Initialize Nodemailer transporter conditionally
+let emailTransporter = null;
+if (process.env.SMTP_USER && process.env.SMTP_USER !== 'your_email@gmail.com' &&
+    process.env.SMTP_PASS && process.env.SMTP_PASS !== 'your_email_app_password_here') {
+  emailTransporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST || 'smtp.gmail.com',
+    port: parseInt(process.env.SMTP_PORT || '587'),
+    secure: false, // true for 465, false for other ports
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  console.log("Nodemailer Transporter (Auth) initialized successfully.");
 } else {
-  console.log("Twilio Verify credentials missing. Running OTP in Simulated mode.");
+  console.log("SMTP email credentials missing. Running OTP in Simulated mode.");
 }
+
+// In-memory store for email OTPs
+const otpStore = new Map();
+
+// Helper to generate a 6-digit numeric OTP code
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
 // Helper to format phone to E.164 (+CountryCodePhoneNumber)
 const formatPhoneToE164 = (phone) => {
@@ -230,32 +242,58 @@ router.post('/routes', auth, async (req, res) => {
 });
 
 // @route   POST api/auth/contacts/send-otp
-// @desc    Send OTP to a contact's phone
+// @desc    Send OTP to a contact's email
 router.post('/contacts/send-otp', auth, async (req, res) => {
-  const { phone } = req.body;
+  const { email } = req.body;
 
-  if (!phone) {
-    return res.status(400).json({ msg: 'Phone number is required' });
+  if (!email) {
+    return res.status(400).json({ msg: 'Email is required' });
   }
 
-  const formattedPhone = formatPhoneToE164(phone);
+  const otpCode = generateOTP();
 
   try {
-    if (twilioVerifyClient && verifyServiceSid) {
-      // Send real SMS OTP via Twilio Verify
-      const verification = await twilioVerifyClient.verify.v2.services(verifyServiceSid)
-        .verifications
-        .create({ to: formattedPhone, channel: 'sms' });
-      
-      console.log(`Real OTP sent to ${formattedPhone}. Status: ${verification.status}`);
-      return res.json({ success: true, isSimulated: false, status: verification.status });
+    if (emailTransporter) {
+      // Send real email OTP via nodemailer
+      const subject = "SafePath AI - Guardian Verification Code";
+      const body = `Hello,
+
+You have been requested to be added as an emergency trusted contact (Guardian) on SafePath AI.
+
+Your verification code is: ${otpCode}
+
+Please share this code with the user to complete registration. If you did not request this, you can ignore this email.
+
+Best regards,
+SafePath AI Safety Team`;
+
+      await emailTransporter.sendMail({
+        from: `"SafePath AI" <${process.env.SMTP_USER}>`,
+        to: email,
+        subject: subject,
+        text: body
+      });
+
+      // Save to store
+      otpStore.set(email.toLowerCase(), {
+        code: otpCode,
+        expires: Date.now() + 10 * 60 * 1000 // 10 minutes
+      });
+
+      console.log(`Real OTP sent to email ${email}.`);
+      return res.json({ success: true, isSimulated: false });
     } else {
       // Simulated OTP
-      console.log(`\n================== SIMULATED OTP SEND ==================`);
-      console.log(`TO: ${formattedPhone}`);
+      otpStore.set(email.toLowerCase(), {
+        code: '123456',
+        expires: Date.now() + 10 * 60 * 1000
+      });
+
+      console.log(`\n================== SIMULATED EMAIL OTP SEND ==================`);
+      console.log(`TO: ${email}`);
       console.log(`OTP CODE: 123456 (Simulated)`);
-      console.log(`========================================================\n`);
-      return res.json({ success: true, isSimulated: true, msg: 'Simulated OTP sent to contact (Use 123456)' });
+      console.log(`==============================================================\n`);
+      return res.json({ success: true, isSimulated: true, msg: 'Simulated OTP sent to email (Use 123456)' });
     }
   } catch (err) {
     console.error("OTP send failed:", err.message);
@@ -277,30 +315,27 @@ router.post('/contacts/verify-otp', auth, async (req, res) => {
   try {
     let verified = false;
 
-    if (twilioVerifyClient && verifyServiceSid) {
-      // Verify real SMS OTP via Twilio Verify
-      try {
-        const check = await twilioVerifyClient.verify.v2.services(verifyServiceSid)
-          .verificationChecks
-          .create({ to: formattedPhone, code: code });
-        
-        if (check.status === 'approved') {
+    // Check store
+    const storedRecord = otpStore.get(email.toLowerCase());
+    if (storedRecord) {
+      if (storedRecord.expires > Date.now()) {
+        if (storedRecord.code === code.trim()) {
           verified = true;
+          // Clean up OTP code after successful verification
+          otpStore.delete(email.toLowerCase());
         } else {
-          console.log(`Real OTP check failed for ${formattedPhone}. Status: ${check.status}`);
+          console.log(`OTP check failed for ${email}. Entered: ${code}, Expected: ${storedRecord.code}`);
         }
-      } catch (err) {
-        console.error(`Twilio Verify API check error:`, err.message);
+      } else {
+        console.log(`OTP expired for ${email}`);
+        otpStore.delete(email.toLowerCase());
       }
     } else {
-      // Simulated OTP check
-      if (code === '123456') {
-        verified = true;
-      }
+      console.log(`No OTP stored for ${email}`);
     }
 
     if (!verified) {
-      return res.status(400).json({ msg: 'Invalid verification code. Please try again.' });
+      return res.status(400).json({ msg: 'Invalid or expired verification code. Please try again.' });
     }
 
     // OTP Verified, add contact to user profile
