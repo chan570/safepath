@@ -10,15 +10,24 @@ const nodemailer = require('nodemailer');
 let emailTransporter = null;
 if (process.env.SMTP_USER && process.env.SMTP_USER !== 'your_email@gmail.com' &&
     process.env.SMTP_PASS && process.env.SMTP_PASS !== 'your_email_app_password_here') {
-  emailTransporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST || 'smtp.gmail.com',
-    port: parseInt(process.env.SMTP_PORT || '587'),
-    secure: false, // true for 465, false for other ports
+  
+  const transporterConfig = {
     auth: {
       user: process.env.SMTP_USER,
       pass: process.env.SMTP_PASS,
-    },
-  });
+    }
+  };
+  
+  if (process.env.SMTP_HOST) {
+    transporterConfig.host = process.env.SMTP_HOST;
+    transporterConfig.port = parseInt(process.env.SMTP_PORT || '587');
+    transporterConfig.secure = process.env.SMTP_SECURE === 'true' || transporterConfig.port === 465;
+  } else {
+    // Default to Gmail service shortcut to bypass Vercel serverless port 587 STARTTLS timeouts
+    transporterConfig.service = 'gmail';
+  }
+  
+  emailTransporter = nodemailer.createTransport(transporterConfig);
   console.log("Nodemailer Transporter (Auth) initialized successfully.");
 } else {
   console.log("SMTP email credentials missing. Running OTP in Simulated mode.");
