@@ -9,8 +9,18 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Connect Database
-connectDB();
+// Connect Database and load safety datasets
+const startServer = async () => {
+  try {
+    await connectDB();
+    const datasetManager = require('./utils/datasetManager');
+    await datasetManager.initialize();
+  } catch (err) {
+    console.error("❌ CRITICAL: Failed during database or dataset initialization:", err);
+    process.exit(1);
+  }
+};
+startServer();
 
 // Define Routes
 app.use('/api/auth', require('./routes/auth'));

@@ -1,79 +1,10 @@
 const fs = require('fs');
 const path = require('path');
 
-const DATA_DIR = process.env.VERCEL
-  ? path.join('/tmp', 'data')
-  : path.join(__dirname, '..', 'data');
-
-// Ensure data directory exists
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-
+const DATA_DIR = path.join(__dirname, '..', 'data');
 const CRIME_PATH = path.join(DATA_DIR, 'crime.json');
 const ACCIDENTS_PATH = path.join(DATA_DIR, 'accidents.json');
 const LIGHTING_PATH = path.join(DATA_DIR, 'lighting.json');
-
-/**
- * Generate mock safety data centered around Delhi (Leaflet's initial view)
- * to ensure immediate visual interaction and routing testing.
- */
-const generateMockData = () => {
-  const delhiLat = 28.6139;
-  const delhiLng = 77.2090;
-
-  const crimes = [];
-  const accidents = [];
-  const lighting = [];
-
-  // Generate 80 mock entries for rich heatmap visualization
-  for (let i = 0; i < 80; i++) {
-    const latOffset = (Math.random() - 0.5) * 0.15;
-    const lngOffset = (Math.random() - 0.5) * 0.15;
-
-    const lat = delhiLat + latOffset;
-    const lng = delhiLng + lngOffset;
-
-    // Crime incident seed
-    const crimeTypes = ['Theft', 'Assault', 'Harassment', 'Vandalism', 'Bag Snatching'];
-    crimes.push({
-      id: `crime_${i}`,
-      coordinates: { lat, lng },
-      severity: Math.random() > 0.6 ? 'High' : (Math.random() > 0.3 ? 'Medium' : 'Low'),
-      type: crimeTypes[Math.floor(Math.random() * crimeTypes.length)],
-      description: `Reported area for ${crimeTypes[Math.floor(Math.random() * crimeTypes.length)].toLowerCase()}.`
-    });
-
-    // Accident hotspot seed
-    const accidentTypes = ['Vehicle Collision', 'Pedestrian Crash', 'Over speeding Accident', 'Blind Spot Collision'];
-    accidents.push({
-      id: `accident_${i}`,
-      coordinates: { lat: lat + 0.008, lng: lng - 0.008 },
-      severity: Math.random() > 0.7 ? 'High' : (Math.random() > 0.3 ? 'Medium' : 'Low'),
-      type: accidentTypes[Math.floor(Math.random() * accidentTypes.length)],
-      description: `Traffic incident at intersection.`
-    });
-
-    // Low lighting street seed
-    const lightStatus = ['Unlit', 'Dim'];
-    lighting.push({
-      id: `light_${i}`,
-      coordinates: { lat: lat - 0.008, lng: lng + 0.008 },
-      status: lightStatus[Math.floor(Math.random() * lightStatus.length)],
-      description: 'Street light malfunction reported by community.'
-    });
-  }
-
-  fs.writeFileSync(CRIME_PATH, JSON.stringify(crimes, null, 2));
-  fs.writeFileSync(ACCIDENTS_PATH, JSON.stringify(accidents, null, 2));
-  fs.writeFileSync(LIGHTING_PATH, JSON.stringify(lighting, null, 2));
-  console.log("🚀 Custom safety datasets successfully seeded to backend/data/");
-};
-
-// Seed data files if they do not exist
-if (!fs.existsSync(CRIME_PATH) || !fs.existsSync(ACCIDENTS_PATH) || !fs.existsSync(LIGHTING_PATH)) {
-  generateMockData();
-}
 
 class DatasetManager {
   constructor() {
@@ -85,23 +16,139 @@ class DatasetManager {
     // Mapping: "latIdx,lngIdx" -> { crimes: [], accidents: [], lighting: [] }
     this.grid = {};
     this.cellSize = 0.004; // ~400m cell size for fine-grained indexing
-    
-    this.loadDatasets();
   }
 
   /**
-   * Load datasets from disk and rebuild spatial index.
+   * Initialize from MongoDB. Seeds collections if they are empty.
    */
-  loadDatasets() {
+  async initialize() {
     try {
-      this.crimes = JSON.parse(fs.readFileSync(CRIME_PATH, 'utf8'));
-      this.accidents = JSON.parse(fs.readFileSync(ACCIDENTS_PATH, 'utf8'));
-      this.lighting = JSON.parse(fs.readFileSync(LIGHTING_PATH, 'utf8'));
+      const Crime = require('../models/Crime');
+      const Accident = require('../models/Accident');
+      const StreetLight = require('../models/StreetLight');
+
+      // Check counts
+      const crimeCount = await Crime.countDocuments();
+      const accidentCount = await Accident.countDocuments();
+      const lightCount = await StreetLight.countDocuments();
+
+      if (crimeCount === 0 || accidentCount === 0 || lightCount === 0) {
+        console.log("📂 MongoDB safety collections are empty. Seeding from local files / generator...");
+        await this.seedToMongoDB(Crime, Accident, StreetLight);
+      }
+
+      // Load all records from MongoDB
+      this.crimes = await Crime.find({}).lean();
+      this.accidents = await Accident.find({}).lean();
+      this.lighting = await StreetLight.find({}).lean();
+
+      console.log(`[DatasetManager] Loaded from MongoDB: ${this.crimes.length} crimes, ${this.accidents.length} accidents, ${this.lighting.length} lighting logs.`);
       
-      console.log(`[DatasetManager] Loaded: ${this.crimes.length} crimes, ${this.accidents.length} accidents, ${this.lighting.length} lighting logs.`);
+      // Build index
       this.buildSpatialIndex();
     } catch (err) {
-      console.error("[DatasetManager] Error reading datasets:", err);
+      console.error("❌ [DatasetManager] Initialization failed:", err);
+      throw err; // Fail-fast, propagate error
+    }
+  }
+
+  /**
+   * Seed collections in MongoDB from local files or generated data.
+   */
+  async seedToMongoDB(Crime, Accident, StreetLight) {
+    let crimesSeed = [];
+    let accidentsSeed = [];
+    let lightingSeed = [];
+
+    // Try reading local JSON files first
+    try {
+      if (fs.existsSync(CRIME_PATH) && fs.existsSync(ACCIDENTS_PATH) && fs.existsSync(LIGHTING_PATH)) {
+        console.log("[DatasetManager] Found local dataset files. Reading for seeding...");
+        crimesSeed = JSON.parse(fs.readFileSync(CRIME_PATH, 'utf8'));
+        accidentsSeed = JSON.parse(fs.readFileSync(ACCIDENTS_PATH, 'utf8'));
+        lightingSeed = JSON.parse(fs.readFileSync(LIGHTING_PATH, 'utf8'));
+      }
+    } catch (err) {
+      console.warn("[DatasetManager] Failed to read local files, will generate fresh mock data:", err.message);
+    }
+
+    // Generate in-memory if files were not read successfully or were empty
+    if (crimesSeed.length === 0 || accidentsSeed.length === 0 || lightingSeed.length === 0) {
+      console.log("[DatasetManager] Generating fresh Delhi mock datasets for seeding...");
+      const delhiLat = 28.6139;
+      const delhiLng = 77.2090;
+
+      crimesSeed = [];
+      accidentsSeed = [];
+      lightingSeed = [];
+
+      for (let i = 0; i < 80; i++) {
+        const latOffset = (Math.random() - 0.5) * 0.15;
+        const lngOffset = (Math.random() - 0.5) * 0.15;
+        const lat = delhiLat + latOffset;
+        const lng = delhiLng + lngOffset;
+
+        const crimeTypes = ['Theft', 'Assault', 'Harassment', 'Vandalism', 'Bag Snatching'];
+        crimesSeed.push({
+          id: `crime_${i}`,
+          coordinates: { lat, lng },
+          severity: Math.random() > 0.6 ? 'High' : (Math.random() > 0.3 ? 'Medium' : 'Low'),
+          type: crimeTypes[Math.floor(Math.random() * crimeTypes.length)],
+          description: `Reported area for ${crimeTypes[Math.floor(Math.random() * crimeTypes.length)].toLowerCase()}.`
+        });
+
+        const accidentTypes = ['Vehicle Collision', 'Pedestrian Crash', 'Over speeding Accident', 'Blind Spot Collision'];
+        accidentsSeed.push({
+          id: `accident_${i}`,
+          coordinates: { lat: lat + 0.008, lng: lng - 0.008 },
+          severity: Math.random() > 0.7 ? 'High' : (Math.random() > 0.3 ? 'Medium' : 'Low'),
+          type: accidentTypes[Math.floor(Math.random() * accidentTypes.length)],
+          description: `Traffic incident at intersection.`
+        });
+
+        const lightStatus = ['Unlit', 'Dim'];
+        lightingSeed.push({
+          id: `light_${i}`,
+          coordinates: { lat: lat - 0.008, lng: lng + 0.008 },
+          status: lightStatus[Math.floor(Math.random() * lightStatus.length)],
+          description: 'Street light malfunction reported by community.'
+        });
+      }
+    }
+
+    // Format for Mongoose with GeoJSON structures
+    const formatPoint = (item) => ({
+      id: item.id,
+      coordinates: item.coordinates,
+      severity: item.severity,
+      type: item.type,
+      status: item.status,
+      description: item.description,
+      location: {
+        type: 'Point',
+        coordinates: [item.coordinates.lng, item.coordinates.lat] // [lng, lat]
+      }
+    });
+
+    const crimesToInsert = crimesSeed.map(formatPoint);
+    const accidentsToInsert = accidentsSeed.map(formatPoint);
+    const lightingToInsert = lightingSeed.map(formatPoint);
+
+    // Save to DB
+    if (crimesToInsert.length > 0) {
+      await Crime.deleteMany({});
+      await Crime.insertMany(crimesToInsert);
+      console.log(`[DatasetManager] Seeded ${crimesToInsert.length} crimes to MongoDB.`);
+    }
+    if (accidentsToInsert.length > 0) {
+      await Accident.deleteMany({});
+      await Accident.insertMany(accidentsToInsert);
+      console.log(`[DatasetManager] Seeded ${accidentsToInsert.length} accidents to MongoDB.`);
+    }
+    if (lightingToInsert.length > 0) {
+      await StreetLight.deleteMany({});
+      await StreetLight.insertMany(lightingToInsert);
+      console.log(`[DatasetManager] Seeded ${lightingToInsert.length} light logs to MongoDB.`);
     }
   }
 
@@ -131,11 +178,7 @@ class DatasetManager {
   }
 
   /**
-   * Queries safety features within a bounding box defined by a point and degree offsets.
-   * Runs in O(1) time complexity by querying grid buckets.
-   * @param {number} lat 
-   * @param {number} lng 
-   * @param {number} radiusDegrees (~0.002 degrees is approx 200 meters)
+   * Queries safety features within a bounding box.
    */
   getNearbyFeatures(lat, lng, radiusDegrees = 0.002) {
     const latIdxStart = Math.floor((lat - radiusDegrees) / this.cellSize);
