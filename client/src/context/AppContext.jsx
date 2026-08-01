@@ -103,7 +103,12 @@ export const AppProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error(`Server returned HTTP ${res.status}. Could not parse JSON response.`);
+      }
       if (res.ok) {
         setToken(data.token);
         setUser(data.user);
@@ -112,10 +117,10 @@ export const AppProvider = ({ children }) => {
         setSuccessMsg(`Welcome back, ${data.user.username}!`);
         setTimeout(() => setSuccessMsg(null), 3000);
       } else {
-        setAuthError(data.msg || 'Login failed');
+        setAuthError(data.msg || data.message || `Login failed (HTTP ${res.status})`);
       }
     } catch (err) {
-      setAuthError('Connection failed. Is the server running?');
+      setAuthError(err.message.includes('HTTP') ? err.message : 'Connection failed. Is the server running?');
     } finally {
       setLoading(false);
     }
@@ -130,17 +135,22 @@ export const AppProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email })
       });
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error(`Server returned HTTP ${res.status}. Could not parse JSON response.`);
+      }
       if (res.ok) {
         setSuccessMsg(data.msg || 'Verification OTP code sent to your email!');
         setTimeout(() => setSuccessMsg(null), 3000);
         return true;
       } else {
-        setAuthError(data.msg || data.message || 'Failed to send OTP code');
+        setAuthError(data.msg || data.message || `Failed to send OTP code (HTTP ${res.status})`);
         return false;
       }
     } catch (err) {
-      setAuthError('Connection failed. Is the server running?');
+      setAuthError(err.message.includes('HTTP') ? err.message : 'Connection failed. Is the server running?');
       return false;
     } finally {
       setLoading(false);
@@ -156,7 +166,12 @@ export const AppProvider = ({ children }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, email, password, code })
       });
-      const data = await res.json();
+      let data = {};
+      try {
+        data = await res.json();
+      } catch (parseErr) {
+        throw new Error(`Server returned HTTP ${res.status}. Could not parse JSON response.`);
+      }
       if (res.ok) {
         setToken(data.token);
         setUser(data.user);
@@ -164,11 +179,11 @@ export const AppProvider = ({ children }) => {
         setTimeout(() => setSuccessMsg(null), 3000);
         return true;
       } else {
-        setAuthError(data.msg || data.message || 'Registration failed');
+        setAuthError(data.msg || data.message || `Registration failed (HTTP ${res.status})`);
         return false;
       }
     } catch (err) {
-      setAuthError('Connection failed. Is the server running?');
+      setAuthError(err.message.includes('HTTP') ? err.message : 'Connection failed. Is the server running?');
       return false;
     } finally {
       setLoading(false);
