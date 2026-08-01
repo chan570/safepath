@@ -3,7 +3,7 @@ require('dotenv').config();
 const config = {
   env: process.env.NODE_ENV || 'development',
   port: parseInt(process.env.PORT || '4000', 10),
-  mongodbUri: process.env.MONGODB_URI || 'mongodb://localhost:27017/safepath',
+  mongodbUri: process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/safepath',
   jwtSecret: process.env.JWT_SECRET || 'safepath_secret_key_jwt',
   mlServiceUrl: process.env.ML_SERVICE_URL || 'http://127.0.0.1:5000',
   smtp: {
