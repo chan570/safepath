@@ -1,6 +1,7 @@
 const fetch = require('node-fetch');
 const MinHeap = require('./priorityQueue');
 const datasetManager = require('./datasetManager');
+const logger = require('./logger');
 
 // In-memory cache for Overpass OSM queries to optimize request speeds
 const overpassCache = new Map();
@@ -74,7 +75,7 @@ const dijkstra = (graph, startNode, endNode, weightFn) => {
 
 // High-fidelity fallback grid graph builder (if Overpass API is rate-limited or offline)
 const buildFallbackGraph = (source, destination) => {
-  console.log("⚠️ Fallback Mode: Generating grid graph...");
+  logger.warn("⚠️ Fallback Mode: Generating grid graph...");
   const graph = {};
   const nodeCoords = {};
 
@@ -168,7 +169,7 @@ const computeSafestRoutes = async (source, destination, hour, safetyOptions, use
   let osmData = null;
 
   if (overpassCache.has(cacheKey)) {
-    console.log("⚡ Fetching road network from local query cache...");
+    logger.info("⚡ Fetching road network from local query cache...");
     osmData = overpassCache.get(cacheKey);
   } else {
     const overpassUrl = `https://overpass-api.de/api/interpreter`;
@@ -177,7 +178,7 @@ const computeSafestRoutes = async (source, destination, hour, safetyOptions, use
       out geom;`;
 
     try {
-      console.log(`🌐 Querying Overpass API for road bbox: [${minLat.toFixed(4)}, ${minLng.toFixed(4)}] to [${maxLat.toFixed(4)}, ${maxLng.toFixed(4)}]`);
+      logger.info(`🌐 Querying Overpass API for road bbox: [${minLat.toFixed(4)}, ${minLng.toFixed(4)}] to [${maxLat.toFixed(4)}, ${maxLng.toFixed(4)}]`);
       const response = await fetch(overpassUrl, {
         method: 'POST',
         body: `data=${encodeURIComponent(overpassQuery)}`,
@@ -196,7 +197,7 @@ const computeSafestRoutes = async (source, destination, hour, safetyOptions, use
         throw new Error("Overpass returned empty results");
       }
     } catch (err) {
-      console.warn(`[GraphRouter] Overpass fetch failed: ${err.message}. Using fallback generator.`);
+      logger.warn(`[GraphRouter] Overpass fetch failed: ${err.message}. Using fallback generator.`);
       isFallback = true;
     }
   }
@@ -249,7 +250,7 @@ const computeSafestRoutes = async (source, destination, hour, safetyOptions, use
         }
       }
     });
-    console.log(`[GraphRouter] Parsed OSM network: ${Object.keys(graph).length} intersections.`);
+    logger.info(`[GraphRouter] Parsed OSM network: ${Object.keys(graph).length} intersections.`);
   }
 
   // If graph is empty, trigger fallback
@@ -384,10 +385,10 @@ const computeSafestRoutes = async (source, destination, hour, safetyOptions, use
   };
 
   // Execute Dijkstra solvers
-  console.log(`🧭 Solving Safest Route...`);
+  logger.info(`🧭 Solving Safest Route...`);
   const safestResult = dijkstra(graph, startNode, endNode, calculateSafetyWeight);
 
-  console.log(`⚡ Solving Fastest Route...`);
+  logger.info(`⚡ Solving Fastest Route...`);
   const fastestResult = dijkstra(graph, startNode, endNode, calculateFastestWeight);
 
   if (safestResult.path.length === 0 || fastestResult.path.length === 0) {

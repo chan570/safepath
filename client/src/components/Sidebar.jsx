@@ -3,7 +3,7 @@ import {
   Menu, Search, Navigation, User, Users, PhoneCall, 
   Bookmark, History, X, ChevronDown, ChevronUp, Trash2, 
   Plus, Lock, LogOut, Compass, Shield, AlertTriangle, 
-  Settings, Check, MapPin, Share2, HelpCircle
+  Settings, Check, MapPin, Share2, HelpCircle, Key
 } from 'lucide-react';
 import { AppContext } from '../context/AppContext';
 import { searchPresets } from '../utils/presets';
@@ -73,11 +73,19 @@ export default function Sidebar() {
   const destTimeoutRef = useRef(null);
 
   // Auth Inputs
-  const { login, register, authError, setAuthError } = useContext(AppContext);
+  const { login, sendRegisterOTP, register, authError, setAuthError } = useContext(AppContext);
   const [isRegistering, setIsRegistering] = useState(false);
   const [authEmail, setAuthEmail] = useState('');
   const [authPass, setAuthPass] = useState('');
   const [authUsername, setAuthUsername] = useState('');
+  const [isRegOTPSent, setIsRegOTPSent] = useState(false);
+  const [regOTP, setRegOTP] = useState('');
+
+  // Reset OTP states on auth tab toggle
+  useEffect(() => {
+    setIsRegOTPSent(false);
+    setRegOTP('');
+  }, [isRegistering]);
 
   // Trusted Contact Inputs
   const [contactName, setContactName] = useState('');
@@ -206,7 +214,14 @@ export default function Sidebar() {
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     if (isRegistering) {
-      await register(authUsername, authEmail, authPass);
+      if (!isRegOTPSent) {
+        const otpSent = await sendRegisterOTP(authEmail);
+        if (otpSent) {
+          setIsRegOTPSent(true);
+        }
+      } else {
+        await register(authUsername, authEmail, authPass, regOTP);
+      }
     } else {
       await login(authEmail, authPass);
     }
@@ -1151,6 +1166,22 @@ export default function Sidebar() {
                 />
               </div>
 
+              {isRegistering && isRegOTPSent && (
+                <div style={{ position: 'relative' }}>
+                  <Key size={18} color="var(--gm-accent)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+                  <input 
+                    type="text" required placeholder="Verification Code (OTP)" 
+                    maxLength={6}
+                    style={{ 
+                      width: '100%', padding: '12px 14px 12px 42px', backgroundColor: 'var(--gm-hover)',
+                      border: '1px solid var(--gm-accent)', borderRadius: '10px', fontSize: '14px', color: 'var(--gm-text)',
+                      outline: 'none', transition: 'border-color 0.2s', fontWeight: 'bold'
+                    }}
+                    value={regOTP} onChange={(e) => setRegOTP(e.target.value)}
+                  />
+                </div>
+              )}
+
               <button 
                 type="submit" className="glass-btn" 
                 style={{ 
@@ -1160,7 +1191,7 @@ export default function Sidebar() {
                   cursor: 'pointer', marginTop: '8px', transition: 'transform 0.1s ease'
                 }}
               >
-                {isRegistering ? 'Create Secure Account' : 'Secure Sign In'}
+                {isRegistering ? (isRegOTPSent ? 'Verify OTP & Create Account' : 'Send Verification OTP') : 'Secure Sign In'}
               </button>
             </form>
           </div>

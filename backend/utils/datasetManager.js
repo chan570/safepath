@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const logger = require('./logger');
 
 const DATA_DIR = path.join(__dirname, '..', 'data');
 const CRIME_PATH = path.join(DATA_DIR, 'crime.json');
@@ -26,6 +27,8 @@ class DatasetManager {
       const Crime = require('../models/Crime');
       const Accident = require('../models/Accident');
       const StreetLight = require('../models/StreetLight');
+      const User = require('../models/User');
+      const bcrypt = require('bcryptjs');
 
       // Check counts
       const crimeCount = await Crime.countDocuments();
@@ -33,7 +36,7 @@ class DatasetManager {
       const lightCount = await StreetLight.countDocuments();
 
       if (crimeCount === 0 || accidentCount === 0 || lightCount === 0) {
-        console.log("📂 MongoDB safety collections are empty. Seeding from local files / generator...");
+        logger.info("📂 MongoDB safety collections are empty. Seeding from local files / generator...");
         await this.seedToMongoDB(Crime, Accident, StreetLight);
       }
 
@@ -42,12 +45,59 @@ class DatasetManager {
       this.accidents = await Accident.find({}).lean();
       this.lighting = await StreetLight.find({}).lean();
 
-      console.log(`[DatasetManager] Loaded from MongoDB: ${this.crimes.length} crimes, ${this.accidents.length} accidents, ${this.lighting.length} lighting logs.`);
+      logger.info(`[DatasetManager] Loaded from MongoDB: ${this.crimes.length} crimes, ${this.accidents.length} accidents, ${this.lighting.length} lighting logs.`);
       
       // Build index
       this.buildSpatialIndex();
+
+      // Seed Default Demo User for Interviews
+      const demoEmail = 'demo@gmail.com';
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash('Password123!', salt);
+      const existingDemo = await User.findOne({ email: demoEmail });
+
+      if (!existingDemo) {
+        logger.info(`Seeding default demo user account (${demoEmail}) for interviews...`);
+        const demoUser = new User({
+          username: 'demouser',
+          email: demoEmail,
+          password: hashedPassword,
+          trustedContacts: [
+            {
+              name: 'Guardian Alpha',
+              phone: '+919876543210',
+              email: 'guardian.alpha@gmail.com',
+              isSOSContact: true
+            },
+            {
+              name: 'Guardian Beta',
+              phone: '+919876543211',
+              email: 'guardian.beta@gmail.com',
+              isSOSContact: true
+            }
+          ],
+          savedRoutes: [
+            {
+              name: 'Delhi University to Connaught Place',
+              sourceName: 'Delhi University',
+              destName: 'Connaught Place',
+              sourceCoords: { lat: 28.6904, lng: 77.2066 },
+              destCoords: { lat: 28.6304, lng: 77.2177 },
+              safetyScore: 92
+            }
+          ]
+        });
+
+        await demoUser.save();
+        logger.info(`✅ Default demo user account seeded successfully! Email: ${demoEmail} | Password: Password123!`);
+      } else {
+        // Enforce password update to match user request "Password123!"
+        existingDemo.password = hashedPassword;
+        await existingDemo.save();
+        logger.info(`✅ Default demo user account password updated to Password123!`);
+      }
     } catch (err) {
-      console.error("❌ [DatasetManager] Initialization failed:", err);
+      logger.error("❌ [DatasetManager] Initialization failed:", err);
       throw err; // Fail-fast, propagate error
     }
   }
@@ -63,18 +113,18 @@ class DatasetManager {
     // Try reading local JSON files first
     try {
       if (fs.existsSync(CRIME_PATH) && fs.existsSync(ACCIDENTS_PATH) && fs.existsSync(LIGHTING_PATH)) {
-        console.log("[DatasetManager] Found local dataset files. Reading for seeding...");
+        logger.info("[DatasetManager] Found local dataset files. Reading for seeding...");
         crimesSeed = JSON.parse(fs.readFileSync(CRIME_PATH, 'utf8'));
         accidentsSeed = JSON.parse(fs.readFileSync(ACCIDENTS_PATH, 'utf8'));
         lightingSeed = JSON.parse(fs.readFileSync(LIGHTING_PATH, 'utf8'));
       }
     } catch (err) {
-      console.warn("[DatasetManager] Failed to read local files, will generate fresh mock data:", err.message);
+      logger.warn(`[DatasetManager] Failed to read local files, will generate fresh mock data: ${err.message}`);
     }
 
     // Generate in-memory if files were not read successfully or were empty
     if (crimesSeed.length === 0 || accidentsSeed.length === 0 || lightingSeed.length === 0) {
-      console.log("[DatasetManager] Generating fresh Delhi mock datasets for seeding...");
+      logger.info("[DatasetManager] Generating fresh Delhi mock datasets for seeding...");
       const delhiLat = 28.6139;
       const delhiLng = 77.2090;
 
@@ -138,17 +188,17 @@ class DatasetManager {
     if (crimesToInsert.length > 0) {
       await Crime.deleteMany({});
       await Crime.insertMany(crimesToInsert);
-      console.log(`[DatasetManager] Seeded ${crimesToInsert.length} crimes to MongoDB.`);
+      logger.info(`[DatasetManager] Seeded ${crimesToInsert.length} crimes to MongoDB.`);
     }
     if (accidentsToInsert.length > 0) {
       await Accident.deleteMany({});
       await Accident.insertMany(accidentsToInsert);
-      console.log(`[DatasetManager] Seeded ${accidentsToInsert.length} accidents to MongoDB.`);
+      logger.info(`[DatasetManager] Seeded ${accidentsToInsert.length} accidents to MongoDB.`);
     }
     if (lightingToInsert.length > 0) {
       await StreetLight.deleteMany({});
       await StreetLight.insertMany(lightingToInsert);
-      console.log(`[DatasetManager] Seeded ${lightingToInsert.length} light logs to MongoDB.`);
+      logger.info(`[DatasetManager] Seeded ${lightingToInsert.length} light logs to MongoDB.`);
     }
   }
 
@@ -174,7 +224,7 @@ class DatasetManager {
     this.accidents.forEach(item => indexItem(item, 'accidents'));
     this.lighting.forEach(item => indexItem(item, 'lighting'));
     
-    console.log(`[DatasetManager] Spatial index created with ${Object.keys(this.grid).length} active cells.`);
+    logger.info(`[DatasetManager] Spatial index created with ${Object.keys(this.grid).length} active cells.`);
   }
 
   /**

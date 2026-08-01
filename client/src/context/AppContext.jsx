@@ -121,14 +121,40 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  const register = async (username, email, password) => {
+  const sendRegisterOTP = async (email) => {
+    setLoading(true);
+    setAuthError(null);
+    try {
+      const res = await fetch(`${API_BASE}/auth/register/send-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setSuccessMsg(data.msg || 'Verification OTP code sent to your email!');
+        setTimeout(() => setSuccessMsg(null), 3000);
+        return true;
+      } else {
+        setAuthError(data.msg || data.message || 'Failed to send OTP code');
+        return false;
+      }
+    } catch (err) {
+      setAuthError('Connection failed. Is the server running?');
+      return false;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (username, email, password, code) => {
     setLoading(true);
     setAuthError(null);
     try {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, email, password })
+        body: JSON.stringify({ username, email, password, code })
       });
       const data = await res.json();
       if (res.ok) {
@@ -136,11 +162,14 @@ export const AppProvider = ({ children }) => {
         setUser(data.user);
         setSuccessMsg(`Account created! Welcome, ${username}`);
         setTimeout(() => setSuccessMsg(null), 3000);
+        return true;
       } else {
-        setAuthError(data.msg || 'Registration failed');
+        setAuthError(data.msg || data.message || 'Registration failed');
+        return false;
       }
     } catch (err) {
       setAuthError('Connection failed. Is the server running?');
+      return false;
     } finally {
       setLoading(false);
     }
@@ -533,6 +562,7 @@ export const AppProvider = ({ children }) => {
       user,
       token,
       login,
+      sendRegisterOTP,
       register,
       logout,
       trustedContacts,

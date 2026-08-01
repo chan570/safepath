@@ -1,9 +1,31 @@
-require('dotenv').config();
+const config = require('./config/config');
 const express = require('express');
 const cors = require('cors');
 const { connectDB } = require('./dbConnect');
+const logger = require('./utils/logger');
+const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
+
+// Custom Security Headers Middleware
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Content-Security-Policy', "default-src 'self'");
+  next();
+});
+
+// Custom HTTP Request Logger Middleware
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.info(`[HTTP] ${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`);
+  });
+  next();
+});
 
 // Initialize Middleware
 app.use(cors());
@@ -16,7 +38,7 @@ const startServer = async () => {
     const datasetManager = require('./utils/datasetManager');
     await datasetManager.initialize();
   } catch (err) {
-    console.error("❌ CRITICAL: Failed during database or dataset initialization:", err);
+    logger.error("❌ CRITICAL: Failed during database or dataset initialization:", err);
     process.exit(1);
   }
 };
@@ -34,18 +56,21 @@ app.get('/health', (req, res) => {
     status: 'online',
     timestamp: new Date().toISOString(),
     env: {
-      port: process.env.PORT || 4000,
-      mlServiceUrl: process.env.ML_SERVICE_URL || 'http://127.0.0.1:5000'
+      port: config.port,
+      mlServiceUrl: config.mlServiceUrl
     }
   });
 });
 
-const PORT = process.env.PORT || 4000;
+// Centralized Global Error Handler Middleware
+app.use(errorHandler);
 
-if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+const PORT = config.port;
+
+if (config.env !== 'production' || !process.env.VERCEL) {
   app.listen(PORT, () => {
-    console.log(`\n🚀 SafePath AI backend running on port ${PORT}`);
-    console.log(`🔗 API Health: http://localhost:${PORT}/health\n`);
+    logger.info(`🚀 SafePath AI backend running on port ${PORT}`);
+    logger.info(`🔗 API Health: http://localhost:${PORT}/health`);
   });
 }
 

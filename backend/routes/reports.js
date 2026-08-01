@@ -1,67 +1,84 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+const config = require('../config/config');
 const auth = require('../middleware/auth');
-const { db } = require('../dbConnect');
+const validate = require('../middleware/validate');
+const reportService = require('../services/reportService');
+const AppError = require('../errors/AppError');
+
+// Validation schemas
+const createReportSchema = {
+  body: {
+    issueType: [{ 
+      required: true, 
+      type: 'string',
+      enum: ['Poorly Lit', 'Harassment Zone', 'Deserted Street', 'No Police Presence', 'Stalking/Suspicious Activity', 'Other']
+    }],
+    coordinates: [{ 
+      required: true,
+      custom: val => {
+        if (!val || typeof val.lat !== 'number' || typeof val.lng !== 'number') {
+          return 'must contain numerical lat and lng coordinates';
+        }
+        return null;
+      }
+    }]
+  }
+};
+
+const getReportsSchema = {
+  query: {
+    lat: [{ required: false, custom: val => isNaN(parseFloat(val)) ? 'must be a valid latitude number' : null }],
+    lng: [{ required: false, custom: val => isNaN(parseFloat(val)) ? 'must be a valid longitude number' : null }],
+    radius: [{ required: false, custom: val => isNaN(parseFloat(val)) ? 'must be a valid radius number' : null }]
+  }
+};
 
 // @route   POST api/reports
-// @desc    Submit an unsafe area report
-router.post('/', async (req, res) => {
-  const { issueType, severity, description, coordinates } = req.body;
+// @desc    Submit an unsafe area report (Guests allowed, Auth optional)
+router.post('/', validate(createReportSchema), async (req, res, next) => {
+  const token = req.header('x-auth-token');
+  let reporterId = 'guest';
 
   try {
-    if (!issueType || !coordinates || !coordinates.lat || !coordinates.lng) {
-      return res.status(400).json({ msg: 'Please provide issue type and location coordinates' });
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, config.jwtSecret);
+        reporterId = decoded.user.id;
+      } catch (err) {
+        throw new AppError('Token is not valid', 401);
+      }
     }
 
-    const reporterId = req.headers['x-auth-token'] ? 'authenticated_user' : 'guest';
-
-    const newReport = await db.reports.create({
-      reporter: reporterId,
-      issueType,
-      severity: severity || 'Medium',
-      description: description || '',
-      coordinates
-    });
-
-    res.status(201).json(newReport);
+    const newReport = await reportService.createReport(req.body, reporterId);
+    res.status(201).json(newReport); // Preserving direct JSON report output format
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 });
 
 // @route   GET api/reports
 // @desc    Get all reports or filter nearby
-router.get('/', async (req, res) => {
+router.get('/', validate(getReportsSchema), async (req, res, next) => {
   const { lat, lng, radius } = req.query;
 
   try {
-    if (lat && lng) {
-      const radiusKm = parseFloat(radius) || 5;
-      const reports = await db.reports.findNearby(parseFloat(lat), parseFloat(lng), radiusKm);
-      return res.json(reports);
-    }
-
-    const reports = await db.reports.find({});
-    res.json(reports);
+    const reports = await reportService.getReports(lat, lng, radius);
+    res.json(reports); // Preserving direct JSON array output format
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 });
 
 // @route   DELETE api/reports/:id
-// @desc    Delete a report
-router.delete('/:id', async (req, res) => {
+// @desc    Delete a report (Secured with auth)
+router.delete('/:id', auth, async (req, res, next) => {
   try {
-    const report = await db.reports.deleteById(req.params.id);
-    if (!report) {
-      return res.status(404).json({ msg: 'Report not found' });
-    }
+    const deletedReport = await reportService.deleteReport(req.params.id);
     res.json({ msg: 'Report removed successfully', id: req.params.id });
   } catch (err) {
-    console.error(err.message);
-    res.status(500).send('Server error');
+    next(err);
   }
 });
 
