@@ -46,7 +46,7 @@ const config = {
   ollamaApiKey: process.env.OLLAMA_API_KEY,
 
   // Business Logic Limits & Thresholds
-  requestTimeoutMs: parseInt(process.env.REQUEST_TIMEOUT_MS || '10000', 10),
+  requestTimeoutMs: parseInt(process.env.REQUEST_TIMEOUT_MS || '60000', 10),
   searchCorridors: process.env.SEARCH_CORRIDORS 
     ? process.env.SEARCH_CORRIDORS.split(',').map(n => parseInt(n.trim(), 10))
     : [2000, 5000, 10000],
