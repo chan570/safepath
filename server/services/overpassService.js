@@ -49,7 +49,9 @@ class OverpassService {
     const query = `[out:json][timeout:${timeoutSec}];\n(\n${queryBody});\nout center;`;
 
     const endpoints = [
-      options.endpoint || OVERPASS_ENDPOINT,
+      options.endpoint || envConfig.overpassEndpoint,
+      'https://maps.mail.ru/osm/tools/overpass/api/interpreter', // Russian server (often does not block cloud IPs)
+      'https://overpass.osm.ch/api/interpreter', // Swiss server
       'https://lz4.overpass-api.de/api/interpreter',
       'https://overpass.kumi.systems/api/interpreter'
     ];
