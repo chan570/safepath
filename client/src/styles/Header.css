@@ -1,0 +1,17 @@
+.app-header {
+  padding: 24px 16px 16px;
+  border-bottom: 1px solid #eaeaea;
+}
+
+.app-title {
+  color: #1a73e8;
+  font-size: 1.8rem;
+  margin-bottom: 8px;
+}
+
+.app-description {
+  color: #5f6368;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  margin-bottom: 0;
+}
