@@ -60,6 +60,8 @@ class PlaceSearchService {
             if (queryCache.has(cacheKey)) {
               places = queryCache.get(cacheKey);
             } else {
+              // Add a 1 second delay to respect Overpass public API rate limits
+              await new Promise(resolve => setTimeout(resolve, 1000));
               places = await OverpassService.fetchPlaces(reqPlace.osmTags, bbox);
               queryCache.set(cacheKey, places);
             }
