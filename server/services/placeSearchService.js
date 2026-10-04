@@ -53,7 +53,12 @@ class PlaceSearchService {
       for (const reqPlace of deduplicatedPlaces) {
         if (!reqPlace.osmTags || reqPlace.osmTags.length === 0) continue;
         
-        for (const bbox of searchAreas) {
+        const orderedAreas = [...searchAreas];
+        if (reqPlace.proximityPreference === 'destination') {
+          orderedAreas.reverse();
+        }
+
+        for (const bbox of orderedAreas) {
           try {
             const cacheKey = `${JSON.stringify(reqPlace.osmTags)}-${JSON.stringify(bbox)}`;
             let places;
@@ -81,6 +86,13 @@ class PlaceSearchService {
                   }
                 }
               }
+            }
+
+            // OPTIMIZATION: If we already found plenty of valid candidates in this chunk,
+            // stop querying Overpass for the rest of the route chunks to prevent 
+            // timeouts, rate-limits, and massive unnecessary API payloads.
+            if (finalEligibleCandidates.length >= 25) {
+              break;
             }
           } catch (error) {
             throw new Error(`Place search failed during ${widthMeters}m expansion: ${error.message}`);
