@@ -91,7 +91,7 @@ class PlaceSearchService {
             // OPTIMIZATION: If we already found plenty of valid candidates in this chunk,
             // stop querying Overpass for the rest of the route chunks to prevent 
             // timeouts, rate-limits, and massive unnecessary API payloads.
-            if (finalEligibleCandidates.length >= 25) {
+            if (finalEligibleCandidates.length >= 12) {
               break;
             }
           } catch (error) {
