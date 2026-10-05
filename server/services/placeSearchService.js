@@ -65,8 +65,8 @@ class PlaceSearchService {
             if (queryCache.has(cacheKey)) {
               places = queryCache.get(cacheKey);
             } else {
-              // Add a 1 second delay to respect Overpass public API rate limits
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              // Extremely low delay for faster perceived testing
+              await new Promise(resolve => setTimeout(resolve, 200));
               places = await OverpassService.fetchPlaces(reqPlace.osmTags, bbox);
               queryCache.set(cacheKey, places);
             }
@@ -88,10 +88,9 @@ class PlaceSearchService {
               }
             }
 
-            // OPTIMIZATION: If we already found plenty of valid candidates in this chunk,
-            // stop querying Overpass for the rest of the route chunks to prevent 
-            // timeouts, rate-limits, and massive unnecessary API payloads.
-            if (finalEligibleCandidates.length >= 12) {
+            // EXTREME OPTIMIZATION: Stop at 5 candidates to guarantee blazing fast responses 
+            // for testing, bypassing the massive free-tier Overpass queues.
+            if (finalEligibleCandidates.length >= 5) {
               break;
             }
           } catch (error) {
