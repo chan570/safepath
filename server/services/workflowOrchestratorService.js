@@ -32,6 +32,9 @@ class WorkflowOrchestratorService {
       if (intent.requestedPlaces && intent.requestedPlaces.some(rp => rp.ratingThreshold)) {
         return { status: 'unsupported_constraint', message: 'Requested rating threshold is unverifiable.' };
       }
+      if (intent.requestedPlaces && intent.requestedPlaces.length > 3) {
+        return { status: 'unsupported_constraint', message: 'You can request a maximum of 3 different stops in a single journey to ensure fast route processing.' };
+      }
 
       // 4-5. Baseline Routing
       const tBaselineStart = performance.now();
