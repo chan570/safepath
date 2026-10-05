@@ -114,11 +114,14 @@ const MapView = ({
             icon={isSelected ? highlightIcon : defaultIcon}
             zIndexOffset={isSelected ? 1000 : 0}
           >
-            {isSelected && (
-              <Tooltip permanent direction="right" offset={[15, -20]} className="custom-map-tooltip selected-tooltip">
-                {candidate.name || candidate.category || 'Place'}
-              </Tooltip>
-            )}
+            <Tooltip 
+              permanent 
+              direction={isSelected ? "right" : "bottom"} 
+              offset={isSelected ? [15, -20] : [0, 0]} 
+              className={`custom-map-tooltip ${isSelected ? 'selected-tooltip' : ''}`}
+            >
+              {candidate.name || candidate.category || 'Place'}
+            </Tooltip>
             <Popup>
               <strong>{candidate.name || 'Place'}</strong><br/>
               {candidate.category}
