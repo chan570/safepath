@@ -32,3 +32,33 @@
   font-weight: 500;
   color: #3c4043;
 }
+
+/* Custom Tooltip Styles for Map Markers */
+.leaflet-tooltip.custom-map-tooltip {
+  background-color: rgba(255, 255, 255, 0.95);
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  padding: 4px 8px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  color: #333;
+  white-space: nowrap;
+}
+
+.leaflet-tooltip.custom-map-tooltip strong {
+  color: #1a73e8;
+  font-weight: 600;
+}
+
+.leaflet-tooltip.selected-tooltip {
+  background-color: #fff3e0;
+  border-color: #ff9800;
+  color: #e65100;
+  font-weight: 600;
+}
+
+.leaflet-tooltip.custom-map-tooltip::before {
+  display: none; /* Hide default leaflet tooltip arrow if desired, or let it be */
+}

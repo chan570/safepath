@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMap } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, Popup, GeoJSON, useMap, Tooltip } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import '../styles/MapView.css';
@@ -92,6 +92,9 @@ const MapView = ({
             position={[stop.lat, stop.lon]} 
             icon={highlightIcon}
           >
+            <Tooltip permanent direction="bottom" offset={[0, 0]} className="custom-map-tooltip selected-tooltip">
+              {stop.name || 'Stop'}
+            </Tooltip>
             <Popup>
               <strong>{stop.name || 'Stop'}</strong><br/>
               {stop.category}
@@ -111,6 +114,11 @@ const MapView = ({
             icon={isSelected ? highlightIcon : defaultIcon}
             zIndexOffset={isSelected ? 1000 : 0}
           >
+            {isSelected && (
+              <Tooltip permanent direction="right" offset={[15, -20]} className="custom-map-tooltip selected-tooltip">
+                {candidate.name || candidate.category || 'Place'}
+              </Tooltip>
+            )}
             <Popup>
               <strong>{candidate.name || 'Place'}</strong><br/>
               {candidate.category}
@@ -197,6 +205,9 @@ const MapView = ({
               position={[baselineRoute.geometry.coordinates[0][1], baselineRoute.geometry.coordinates[0][0]]} 
               icon={startEndIcon}
             >
+              <Tooltip permanent direction="bottom" offset={[0, 0]} className="custom-map-tooltip">
+                <strong>Origin: </strong>{baselineRoute.origin?.displayName ? baselineRoute.origin.displayName.split(',')[0] : 'Start'}
+              </Tooltip>
               <Popup><strong>Origin</strong></Popup>
             </Marker>
             <Marker 
@@ -206,6 +217,9 @@ const MapView = ({
               ]} 
               icon={startEndIcon}
             >
+              <Tooltip permanent direction="bottom" offset={[0, 0]} className="custom-map-tooltip">
+                <strong>Dest: </strong>{baselineRoute.destination?.displayName ? baselineRoute.destination.displayName.split(',')[0] : 'End'}
+              </Tooltip>
               <Popup><strong>Destination</strong></Popup>
             </Marker>
           </>
