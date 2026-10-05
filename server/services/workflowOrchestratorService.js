@@ -121,6 +121,26 @@ class WorkflowOrchestratorService {
           };
       }
 
+      // OPTIMIZATION: Fetch detailed GeoJSON geometries ONLY for the top 3 winning candidates.
+      // Doing this for all 25 candidates previously caused massive network payloads and slow OSRM processing.
+      const OSRMService = require('./osrmService');
+      const originCoords = baselineRoute.origin;
+      const destCoords = baselineRoute.destination;
+      
+      for (const candidate of rankingResult.results) {
+        const candidateCoords = { lat: candidate.lat, lon: candidate.lon };
+        try {
+          const [r1, r2] = await Promise.all([
+            OSRMService.getDrivingRoute([originCoords, candidateCoords], { includeGeometry: true }),
+            OSRMService.getDrivingRoute([candidateCoords, destCoords], { includeGeometry: true })
+          ]);
+          candidate.route1Geometry = r1.geometry;
+          candidate.route2Geometry = r2.geometry;
+        } catch (err) {
+          console.warn(`[WorkflowOrchestrator] Failed to fetch full geometry for candidate ${candidate.name}:`, err.message);
+        }
+      }
+
       return {
         status: 'success',
         type: 'single-stop',

@@ -34,7 +34,7 @@ class CandidateRoutingService {
         return cache.get(key);
       }
       
-      const promise = OSRMService.getDrivingRoute([startCoord, endCoord]).catch(err => {
+      const promise = OSRMService.getDrivingRoute([startCoord, endCoord], { includeGeometry: false }).catch(err => {
         return { error: err.message };
       });
       cache.set(key, promise);

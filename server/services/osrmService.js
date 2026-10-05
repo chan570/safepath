@@ -31,8 +31,9 @@ class OSRMService {
       return `${c.lon},${c.lat}`;
     }).join(';');
 
-    // Use route/v1/driving profile. Request full geometry as GeoJSON.
-    const url = `${options.endpoint || OSRM_ENDPOINT}/route/v1/driving/${coordString}?overview=full&geometries=geojson`;
+    // Use route/v1/driving profile. Request full geometry as GeoJSON unless explicitly disabled.
+    const overviewParam = options.includeGeometry === false ? 'false' : 'full';
+    const url = `${options.endpoint || OSRM_ENDPOINT}/route/v1/driving/${coordString}?overview=${overviewParam}&geometries=geojson`;
 
     const timeoutMs = options.timeoutMs || envConfig.requestTimeoutMs;
 
