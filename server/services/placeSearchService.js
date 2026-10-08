@@ -21,10 +21,9 @@ class PlaceSearchService {
 
     const corridors = envConfig.searchCorridors;
     const queryCache = new Map();
-    const results = [];
 
-    // Process each requirement independently
-    for (const reqPlace of requestedPlaces) {
+    // Process each requirement concurrently
+    const results = await Promise.all(requestedPlaces.map(async (reqPlace) => {
       const seenOsmIds = new Set();
       const eligibleCandidates = [];
       let stoppedAtLevel = corridors[0];
@@ -43,8 +42,7 @@ class PlaceSearchService {
 
       if (!hasSearchAlternatives && !hasRequiredAttributes) {
          console.log(`[PlaceSearchService] No OSM tags could be determined for semantic requirement: ${reqPlace.semanticIntent}`);
-         results.push({ userRequirement: reqPlace.userRequirement || 'Place', levelMeters: stoppedAtLevel, candidates: [] });
-         continue;
+         return { userRequirement: reqPlace.userRequirement || 'Place', levelMeters: stoppedAtLevel, candidates: [] };
       }
 
       // Expand corridor for this specific requirement
@@ -59,30 +57,41 @@ class PlaceSearchService {
 
         let foundEnoughForPlace = false;
 
-        for (const bbox of orderedAreas) {
-          try {
+        // Run independent Overpass corridor/bbox searches concurrently where safe, while keeping provider request limits.
+        const concurrencyLimit = 3;
+        for (let i = 0; i < orderedAreas.length; i += concurrencyLimit) {
+          if (foundEnoughForPlace) break;
+          
+          const batch = orderedAreas.slice(i, i + concurrencyLimit);
+          const batchPromises = batch.map(async (bbox) => {
             const cacheKey = `${JSON.stringify(translation.searchAlternatives)}-${JSON.stringify(translation.requiredAttributes)}-${JSON.stringify(bbox)}`;
             let places;
             if (queryCache.has(cacheKey)) {
               places = queryCache.get(cacheKey);
             } else {
-              await new Promise(resolve => setTimeout(resolve, 200));
+              // Removed artificial 200ms delay.
               places = await OverpassService.fetchPlaces(translation.searchAlternatives, translation.requiredAttributes, bbox);
               queryCache.set(cacheKey, places);
             }
-            
-            for (const place of places) {
-              place.userRequirement = reqPlace.userRequirement || 'Requested Place';
-              place.searchAlternatives = translation.searchAlternatives || [];
-              place.requiredAttributes = translation.requiredAttributes || [];
-              const uniqueId = `${place.osmType}-${place.osmId}`;
-              
-              if (!seenOsmIds.has(uniqueId)) {
-                seenOsmIds.add(uniqueId);
+            return places;
+          });
+
+          try {
+            const batchResults = await Promise.all(batchPromises);
+            for (const places of batchResults) {
+              for (const place of places) {
+                place.userRequirement = reqPlace.userRequirement || 'Requested Place';
+                place.searchAlternatives = translation.searchAlternatives || [];
+                place.requiredAttributes = translation.requiredAttributes || [];
+                const uniqueId = `${place.osmType}-${place.osmId}`;
                 
-                if (typeof place.lat === 'number' && typeof place.lon === 'number') {
-                  if (CorridorUtils.isInsideTrueCorridor(place.lat, place.lon, routeGeometry, widthMeters)) {
-                    eligibleCandidates.push(place);
+                if (!seenOsmIds.has(uniqueId)) {
+                  seenOsmIds.add(uniqueId);
+                  
+                  if (typeof place.lat === 'number' && typeof place.lon === 'number') {
+                    if (CorridorUtils.isInsideTrueCorridor(place.lat, place.lon, routeGeometry, widthMeters)) {
+                      eligibleCandidates.push(place);
+                    }
                   }
                 }
               }
@@ -102,12 +111,12 @@ class PlaceSearchService {
         }
       }
       
-      results.push({
+      return {
         userRequirement: reqPlace.userRequirement || 'Place',
         levelMeters: stoppedAtLevel,
         candidates: eligibleCandidates
-      });
-    }
+      };
+    }));
 
     if (requestedPlaces.length === 1) {
       return {

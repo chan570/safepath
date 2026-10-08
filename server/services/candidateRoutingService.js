@@ -45,65 +45,6 @@ class CandidateRoutingService {
     const routable = [];
     const unroutable = [];
 
-    const processBatch = async (batch) => {
-      const batchPromises = batch.map(async (candidate) => {
-        // 1. Validate coordinates
-        if (typeof candidate.lat !== 'number' || typeof candidate.lon !== 'number') {
-          return { ...candidate, isRoutable: false, routingStatus: 'Invalid coordinates' };
-        }
-
-        const placeCoords = { lat: candidate.lat, lon: candidate.lon };
-        
-        // 2. Fetch both segments concurrently (utilizing the deduplication cache internally)
-        const [route1, route2] = await Promise.all([
-          getRoute(originCoords, placeCoords),
-          getRoute(placeCoords, destCoords)
-        ]);
-
-        // 3. Handle unroutable segments (NoRoute, Timeouts, HTTP errors)
-        if (route1.error || route2.error) {
-          return {
-            ...candidate,
-            isRoutable: false,
-            routingStatus: `Unroutable: ${route1.error || route2.error}`
-          };
-        }
-
-        // 4. Exact mathematical calculation of extra time & distance
-        const tVia = route1.durationSeconds + route2.durationSeconds;
-        const dVia = route1.distanceMeters + route2.distanceMeters;
-        const tExtra = tVia - baselineRoute.durationSeconds;
-
-        const result = {
-          ...candidate,
-          isRoutable: true,
-          routingStatus: 'Success',
-          originToPlaceDurationSeconds: route1.durationSeconds,
-          placeToDestinationDurationSeconds: route2.durationSeconds,
-          viaPlaceDurationSeconds: tVia,
-          baselineDurationSeconds: baselineRoute.durationSeconds,
-          additionalDurationSeconds: tExtra,
-          
-          originToPlaceDistanceMeters: route1.distanceMeters,
-          placeToDestinationDistanceMeters: route2.distanceMeters,
-          viaPlaceDistanceMeters: dVia,
-          baselineDistanceMeters: baselineRoute.distanceMeters,
-
-          route1Geometry: route1.geometry,
-          route2Geometry: route2.geometry
-        };
-
-        // 5. Handle routing inconsistencies mathematically, DO NOT silently clamp to 0
-        if (tExtra < 0) {
-          result.routingStatus = 'Success (Routing Inconsistency: via-place route is faster than baseline)';
-        }
-
-        return result;
-      });
-      
-      return Promise.all(batchPromises);
-    };
-
     // Pre-sort candidates by heuristic distance to ensure we slice the MOST RELEVANT ones.
     const pref = reqPlace.proximityPreference || 'route';
     const sortedCandidates = [...candidates].sort((a, b) => {
@@ -137,17 +78,76 @@ class CandidateRoutingService {
       limitExceeded = true;
     }
 
-    // 6. Execute bounded batches to protect provider endpoints
-    for (let i = 0; i < candidatesToProcess.length; i += concurrencyLimit) {
-      const batch = candidatesToProcess.slice(i, i + concurrencyLimit);
-      const batchResults = await processBatch(batch);
-      
-      // Categorize results. Excludes unroutable candidates from final eligible results.
-      batchResults.forEach(res => {
-        if (res.isRoutable) routable.push(res);
-        else unroutable.push(res);
+    const processCandidate = async (candidate) => {
+        if (typeof candidate.lat !== 'number' || typeof candidate.lon !== 'number') {
+          return { ...candidate, isRoutable: false, routingStatus: 'Invalid coordinates' };
+        }
+
+        const placeCoords = { lat: candidate.lat, lon: candidate.lon };
+        
+        const [route1, route2] = await Promise.all([
+          getRoute(originCoords, placeCoords),
+          getRoute(placeCoords, destCoords)
+        ]);
+
+        if (route1.error || route2.error) {
+          return {
+            ...candidate,
+            isRoutable: false,
+            routingStatus: `Unroutable: ${route1.error || route2.error}`
+          };
+        }
+
+        const tVia = route1.durationSeconds + route2.durationSeconds;
+        const dVia = route1.distanceMeters + route2.distanceMeters;
+        const tExtra = tVia - baselineRoute.durationSeconds;
+
+        const result = {
+          ...candidate,
+          isRoutable: true,
+          routingStatus: 'Success',
+          originToPlaceDurationSeconds: route1.durationSeconds,
+          placeToDestinationDurationSeconds: route2.durationSeconds,
+          viaPlaceDurationSeconds: tVia,
+          baselineDurationSeconds: baselineRoute.durationSeconds,
+          additionalDurationSeconds: tExtra,
+          
+          originToPlaceDistanceMeters: route1.distanceMeters,
+          placeToDestinationDistanceMeters: route2.distanceMeters,
+          viaPlaceDistanceMeters: dVia,
+          baselineDistanceMeters: baselineRoute.distanceMeters,
+
+          route1Geometry: route1.geometry,
+          route2Geometry: route2.geometry
+        };
+
+        if (tExtra < 0) {
+          result.routingStatus = 'Success (Routing Inconsistency: via-place route is faster than baseline)';
+        }
+
+        return result;
+    };
+
+    const activePromises = new Set();
+    const batchResults = [];
+    
+    // Controlled concurrency instead of strictly sequential batches
+    for (const candidate of candidatesToProcess) {
+      const p = processCandidate(candidate).then(res => {
+        activePromises.delete(p);
+        batchResults.push(res);
       });
+      activePromises.add(p);
+      if (activePromises.size >= concurrencyLimit) {
+        await Promise.race(activePromises);
+      }
     }
+    await Promise.all(activePromises);
+    
+    batchResults.forEach(res => {
+      if (res.isRoutable) routable.push(res);
+      else unroutable.push(res);
+    });
 
     return {
       routableCandidates: routable,

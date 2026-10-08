@@ -54,13 +54,13 @@ class WorkflowOrchestratorService {
 
       // MULTI-STOP
       if (intent.requestedPlaces.length > 1) {
-        const stopRequirementGroups = [];
         const tSearchStart = performance.now();
-        for (const reqPlace of intent.requestedPlaces) {
-          const searchResult = await PlaceSearchService.searchPlacesAlongRoute(routeGeometry, [reqPlace]);
-          const displayName = reqPlace.userRequirement || 'Place';
-          stopRequirementGroups.push({ userRequirement: displayName, candidates: searchResult.candidates });
-        }
+        // Run independent multi-stop place searches concurrently using the array mode
+        const searchResults = await PlaceSearchService.searchPlacesAlongRoute(routeGeometry, intent.requestedPlaces);
+        const stopRequirementGroups = searchResults.map(res => ({
+          userRequirement: res.userRequirement,
+          candidates: res.candidates
+        }));
         const tSearchMs = performance.now() - tSearchStart;
         
         const tItineraryStart = performance.now();
@@ -108,12 +108,12 @@ class WorkflowOrchestratorService {
         limitExceeded: routingResult.limitExceeded
       };
       
+      const tRankStart = performance.now();
       const rankingResult = await CandidateRankingService.rankCandidates(
         [...routingResult.routableCandidates, ...routingResult.unroutableCandidates],
         reqPlace, globalConstraints, searchContext
       );
-
-      console.log(`[Perf] Single-stop complete in ${Math.round(performance.now() - tStart)}ms (Prompt: ${Math.round(tPromptMs)}ms, Base: ${Math.round(tBaselineMs)}ms, Search: ${Math.round(tSearchMs)}ms, Route: ${Math.round(tRouteMs)}ms)`);
+      const tRankMs = performance.now() - tRankStart;
 
       if (rankingResult.results.length === 0) {
           return { 
@@ -124,12 +124,13 @@ class WorkflowOrchestratorService {
       }
 
       // OPTIMIZATION: Fetch detailed GeoJSON geometries ONLY for the top 3 winning candidates.
-      // Doing this for all 25 candidates previously caused massive network payloads and slow OSRM processing.
+      // Fetch final top-candidate route geometries concurrently instead of sequentially.
       const OSRMService = require('./osrmService');
       const originCoords = baselineRoute.origin;
       const destCoords = baselineRoute.destination;
       
-      for (const candidate of rankingResult.results) {
+      const tGeoStart = performance.now();
+      await Promise.all(rankingResult.results.map(async (candidate) => {
         const candidateCoords = { lat: candidate.lat, lon: candidate.lon };
         try {
           const [r1, r2] = await Promise.all([
@@ -141,7 +142,10 @@ class WorkflowOrchestratorService {
         } catch (err) {
           console.warn(`[WorkflowOrchestrator] Failed to fetch full geometry for candidate ${candidate.name}:`, err.message);
         }
-      }
+      }));
+      const tGeoMs = performance.now() - tGeoStart;
+
+      console.log(`[Perf] Single-stop complete in ${Math.round(performance.now() - tStart)}ms (Prompt: ${Math.round(tPromptMs)}ms, Base: ${Math.round(tBaselineMs)}ms, Search: ${Math.round(tSearchMs)}ms, Route: ${Math.round(tRouteMs)}ms, Rank: ${Math.round(tRankMs)}ms, Geo: ${Math.round(tGeoMs)}ms)`);
 
       return {
         status: 'success',
