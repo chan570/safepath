@@ -3,19 +3,11 @@
  * 
  * Independently evaluates hard mandatory constraints for routed candidates. 
  * Separates strict eligibility from preference-based ranking.
- * 
- * Verified Constraints:
- * - Category matching (Verified against canonical category tags)
- * - Maximum additional driving time (Verified strictly against OSRM route output)
- * 
- * Unverifiable Constraints:
- * - Rating thresholds (OpenStreetMap does not reliably supply 1-5 star ratings or review counts, and no external provider is integrated).
- * - Arbitrary natural language constraints (e.g. "indoor swimming pool", "must be vegetarian") which cannot be safely evaluated against basic map tags.
  */
 class ConstraintEvaluationService {
   /**
    * Evaluates if a routed candidate satisfies all mandatory constraints.
-   * @param {Object} candidate - The routed candidate object (must include additionalDurationSeconds).
+   * @param {Object} candidate - The routed candidate object.
    * @param {Object} reqPlace - The specific place request object from the prompt intent.
    * @param {Object} globalConstraints - Global constraints from prompt intent (e.g., maxAdditionalDrivingTime).
    * @returns {Object} { isEligible: boolean, checks: Array }
@@ -24,27 +16,7 @@ class ConstraintEvaluationService {
     const checks = [];
     let isEligible = true;
 
-    // 1. Category Matching
-    if (reqPlace.category) {
-      if (candidate.category === reqPlace.category) {
-        checks.push({
-          constraint: 'Category Match',
-          status: 'passed',
-          actualValue: candidate.category,
-          reason: 'Candidate matches the requested canonical category.'
-        });
-      } else {
-        checks.push({
-          constraint: 'Category Match',
-          status: 'failed',
-          actualValue: candidate.category,
-          reason: `Expected '${reqPlace.category}'.`
-        });
-        isEligible = false;
-      }
-    }
-
-    // 2. Maximum Additional Driving Time
+    // 1. Maximum Additional Driving Time
     if (globalConstraints.maxAdditionalDrivingTime) {
       const maxExtra = globalConstraints.maxAdditionalDrivingTime;
       let limitSeconds = null;
@@ -59,7 +31,7 @@ class ConstraintEvaluationService {
              constraint: 'Max Additional Time',
              status: 'failed',
              actualValue: null,
-             reason: 'Candidate is missing required routing information (additionalDurationSeconds).'
+             reason: 'Candidate is missing required routing information.'
            });
            isEligible = false;
         } else if (candidate.additionalDurationSeconds <= limitSeconds) {
@@ -81,33 +53,89 @@ class ConstraintEvaluationService {
       }
     }
 
-    // 3. Minimum Rating Threshold (Unsupported natively by OSM)
+    // 2. Minimum Rating Threshold (Unsupported natively by OSM)
     if (reqPlace.ratingThreshold && reqPlace.ratingThreshold.value != null) {
       checks.push({
         constraint: 'Minimum Rating',
-        status: 'unverifiable',
+        status: 'unsupported',
         actualValue: null,
-        reason: 'OpenStreetMap does not reliably provide star ratings. No paid trusted rating API is configured to verify this constraint.'
+        reason: 'OpenStreetMap does not reliably provide star ratings. Cannot evaluate.'
       });
-      isEligible = false; // We do NOT silently pass unverifiable mandatory constraints
+      // We mark as unsupported but continue processing so the user still gets results
     }
 
-    // 4. Arbitrary Natural Language Hard Constraints
+    // 3. Structured Hard Constraints vs OSM Tags
     if (Array.isArray(reqPlace.hardConstraints) && reqPlace.hardConstraints.length > 0) {
-      reqPlace.hardConstraints.forEach(constraintText => {
-        checks.push({
-          constraint: `Custom Condition: "${constraintText}"`,
-          status: 'unverifiable',
-          actualValue: JSON.stringify(candidate.tags || {}),
-          reason: 'Cannot reliably evaluate arbitrary natural-language constraints against basic OpenStreetMap tags.'
-        });
-        isEligible = false; // We do NOT silently pass unverifiable mandatory constraints
+      const tags = candidate.tags || {};
+      
+      reqPlace.hardConstraints.forEach(constraint => {
+        // e.g., { type: 'diet', value: 'vegetarian' }
+        if (constraint.type === 'diet') {
+          const dietKey = `diet:${constraint.value.toLowerCase()}`;
+          if (tags[dietKey] === 'yes') {
+            checks.push({ constraint: `Diet: ${constraint.value}`, status: 'passed', reason: 'Explicitly verified in OSM tags.' });
+          } else if (tags[dietKey] === 'no') {
+            checks.push({ constraint: `Diet: ${constraint.value}`, status: 'failed', reason: 'Explicitly stated as unavailable in OSM.' });
+            isEligible = false;
+          } else {
+            checks.push({ constraint: `Diet: ${constraint.value}`, status: 'unverifiable', reason: 'OSM tag missing. Cannot confirm or deny.' });
+          }
+        } 
+        else if (constraint.type === 'amenity' || constraint.type === 'facility') {
+          const val = String(constraint.value).toLowerCase();
+          if (Object.values(tags).some(v => String(v).toLowerCase() === val)) {
+            checks.push({ constraint: `Facility: ${val}`, status: 'passed', reason: 'Found matching tag value.' });
+          } else {
+            checks.push({ constraint: `Facility: ${val}`, status: 'unverifiable', reason: 'OSM tag missing. Cannot confirm or deny.' });
+          }
+        }
+        else {
+          checks.push({
+            constraint: `Constraint: ${constraint.type}=${constraint.value}`,
+            status: 'unverifiable',
+            reason: 'Cannot reliably evaluate this constraint against basic OSM tags.'
+          });
+        }
       });
+    }
+
+    // 4. Requirement Match Scoring (Using precise translated OSM concepts)
+    let requirementMatchScore = 0;
+    const tags = candidate.tags || {};
+    
+    const searchAlts = candidate.searchAlternatives || [];
+    const reqAttrs = candidate.requiredAttributes || [];
+    
+    // Check if any of the search alternatives (OR condition) explicitly matched
+    if (searchAlts.length > 0) {
+      const altMatch = searchAlts.some(alt => tags[alt.key] === alt.value);
+      if (altMatch) {
+        requirementMatchScore += 10;
+      } else {
+        // Fallback: the value might exist under a different key but still match semantically
+        const hasVal = searchAlts.some(alt => Object.values(tags).includes(alt.value));
+        if (hasVal) requirementMatchScore += 5;
+      }
+    } else {
+      // If there were no OR alternatives, but the candidate was fetched, it's a baseline match
+      requirementMatchScore += 5; 
+    }
+
+    // Check if the required attributes (AND conditions) explicitly matched
+    if (reqAttrs.length > 0) {
+      let attrMatches = 0;
+      reqAttrs.forEach(attr => {
+        if (tags[attr.key] === attr.value) {
+          attrMatches++;
+        }
+      });
+      requirementMatchScore += (attrMatches * 5);
     }
 
     return {
       isEligible,
-      checks
+      checks,
+      requirementMatchScore
     };
   }
 }

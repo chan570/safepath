@@ -21,31 +21,50 @@ const promptSchema = {
       items: {
         type: "object",
         properties: {
-          category: {
+          userRequirement: {
             type: ["string", "null"],
-            description: "The user-friendly display name of the requested place (e.g., 'ISBT', 'bakery'). Null if ambiguous."
+            description: "The exact phrase or term used by the user for this stop (e.g., 'T point', 'place for chai')."
           },
-          osmTags: {
+          semanticIntent: {
+            type: ["string", "null"],
+            description: "The holistic semantic meaning of the stop (e.g., 'A roadside establishment suitable for drinking tea and having light food/snacks')."
+          },
+          requirements: {
+            type: "array",
+            items: { type: "string" },
+            description: "A list of discrete semantic capabilities required at this place (e.g., ['tea', 'light food', 'phone charging', 'bicycle repair']). Do NOT use predefined categories."
+          },
+          confidence: {
+            type: "number",
+            minimum: 0,
+            maximum: 1,
+            description: "Confidence (0.0 to 1.0) in understanding the user's semantic intent."
+          },
+          hardConstraints: {
             type: "array",
             items: {
               type: "object",
               properties: {
-                key: { type: "string" },
-                value: { type: "string" }
+                type: { type: "string", description: "Constraint type (e.g., 'diet', 'amenity', 'accessibility', 'max_detour')" },
+                value: { type: ["string", "number", "boolean"], description: "Constraint value (e.g., 'vegetarian', 'parking', true, 15)" }
               },
-              required: ["key", "value"]
+              required: ["type", "value"],
+              additionalProperties: false
             },
-            description: "AI-determined OpenStreetMap tags for this place. Must use official OSM tags! e.g., for ISBT/Bus Stand: [{key: 'amenity', value: 'bus_station'}]. For shoe store: [{key: 'shop', value: 'shoes'}]. For mall: [{key: 'shop', value: 'mall'}]."
-          },
-          hardConstraints: {
-            type: "array",
-            items: { type: "string" },
-            description: "Absolute must-haves (e.g., 'must have parking', 'must be vegetarian')."
+            description: "Absolute must-haves derived directly from the prompt."
           },
           softPreferences: {
             type: "array",
-            items: { type: "string" },
-            description: "Nice-to-have features (e.g., 'scenic view', 'quiet')."
+            items: {
+              type: "object",
+              properties: {
+                type: { type: "string", description: "Preference type (e.g., 'minimize_additional_driving_time', 'minimize_distance', 'scenic', 'quiet')" },
+                weight: { type: "number", description: "Importance weight from 0.1 to 1.0" }
+              },
+              required: ["type", "weight"],
+              additionalProperties: false
+            },
+            description: "Nice-to-have features or optimizations with relative weights."
           },
           ratingThreshold: {
             type: ["object", "null"],
@@ -59,11 +78,11 @@ const promptSchema = {
           },
           proximityPreference: {
             type: "string",
-            enum: ["origin", "destination", "any"],
-            description: "User preference for location proximity. 'origin' if near the start or unspecified. 'destination' if explicitly requested near destination. 'any' if explicitly anywhere."
+            enum: ["origin", "destination", "on_the_way", "any"],
+            description: "User preference for location proximity. 'origin' near start, 'destination' near end, 'on_the_way' (default) minimal detour, 'any' everywhere."
           }
         },
-        required: ["category", "osmTags", "hardConstraints", "softPreferences", "ratingThreshold", "proximityPreference"],
+        required: ["userRequirement", "semanticIntent", "requirements", "confidence", "hardConstraints", "softPreferences", "ratingThreshold", "proximityPreference"],
         additionalProperties: false
       },
       description: "List of places requested along the route."

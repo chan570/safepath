@@ -97,7 +97,7 @@ const MapView = ({
             </Tooltip>
             <Popup>
               <strong>{stop.name || 'Stop'}</strong><br/>
-              {stop.category}
+              {stop.userRequirement}
             </Popup>
           </Marker>
         );
@@ -120,11 +120,11 @@ const MapView = ({
               offset={isSelected ? [15, -20] : [0, 0]} 
               className={`custom-map-tooltip ${isSelected ? 'selected-tooltip' : ''}`}
             >
-              {candidate.name || candidate.category || 'Place'}
+              {candidate.name || candidate.userRequirement || 'Place'}
             </Tooltip>
             <Popup>
               <strong>{candidate.name || 'Place'}</strong><br/>
-              {candidate.category}
+              {candidate.userRequirement}
               {isSelected && <br/>}
               {isSelected && <em>Selected Route</em>}
             </Popup>

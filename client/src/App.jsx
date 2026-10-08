@@ -44,6 +44,7 @@ function App() {
     setAppState('loading');
     setErrorMessage('');
     setRoutes([]);
+    setRouteMetadata(null);
     setSelectedRouteIndex(null);
     setBaselineRoute(null);
     setRouteMetadata(null);

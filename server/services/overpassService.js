@@ -1,30 +1,22 @@
-const { getCategoryTags, resolveCategory } = require('../utils/categoryMapper');
 const envConfig = require('../config/env');
 
 const OVERPASS_ENDPOINT = envConfig.overpassEndpoint || 'https://overpass-api.de/api/interpreter';
 
-/**
- * Data Limitations and Integrity Rules for OverpassService:
- * 1. OpenStreetMap does not provide Google-style star ratings. We never generate fake ratings or reviews.
- * 2. An Overpass response guarantees a place was mapped, but does not guarantee the business is currently open.
- * 3. Coordinates for 'ways' and 'relations' are centroids. This centroid is not guaranteed to be an actual building entrance or suitable vehicle access point.
- * 4. We do not invent names for unnamed locations (returns null instead).
- */
 class OverpassService {
   /**
-   * Fetches POIs from Overpass API within a given bounding box.
-   * @param {string} rawCategory - User's category request (must map to an approved category).
+   * Fetches POIs from Overpass API within a given bounding box using proper AND/OR tag logic.
+   * @param {Array} searchAlternatives - Array of alternative POI tags (OR logic).
+   * @param {Array} requiredAttributes - Array of required feature tags (AND logic).
    * @param {object} bbox - Geographic search area { south, west, north, east }.
-   * @param {object} options - Optional overrides { timeoutMs, endpoint }
+   * @param {object} options - Optional overrides
    * @returns {Promise<Array>} Array of normalized POI objects.
    */
-  static async fetchPlaces(osmTags, bbox, options = {}) {
-    // 1. Validate Tags
-    if (!Array.isArray(osmTags) || osmTags.length === 0) {
-      throw new Error(`Invalid or missing OSM tags for place search`);
+  static async fetchPlaces(searchAlternatives, requiredAttributes, bbox, options = {}) {
+    if ((!Array.isArray(searchAlternatives) || searchAlternatives.length === 0) &&
+        (!Array.isArray(requiredAttributes) || requiredAttributes.length === 0)) {
+      throw new Error('Invalid or missing OSM tags for place search');
     }
 
-    // 2. Validate Geographic Area
     if (!bbox || bbox.south == null || bbox.west == null || bbox.north == null || bbox.east == null) {
       throw new Error('Invalid geographic search area. Bounding box (south, west, north, east) is required.');
     }
@@ -32,26 +24,28 @@ class OverpassService {
     const timeoutMs = options.timeoutMs || envConfig.requestTimeoutMs;
     const timeoutSec = Math.floor(timeoutMs / 1000) || 10;
     
-    // 3. Construct Overpass QL
     const bboxStr = `${bbox.south},${bbox.west},${bbox.north},${bbox.east}`;
     
     let queryBody = '';
-    for (const tag of osmTags) {
-      let tagStr = `["${tag.key}"="${tag.value}"]`;
-      if (tag.extra) {
-        tagStr += `["${tag.extra.key}"="${tag.extra.value}"]`;
+    
+    // Build the required attributes string that will be appended (ANDed) to every alternative
+    const reqStr = (requiredAttributes || []).map(tag => `["${tag.key}"="${tag.value}"]`).join('');
+    
+    if (searchAlternatives && searchAlternatives.length > 0) {
+      for (const alt of searchAlternatives) {
+        queryBody += `  nwr["${alt.key}"="${alt.value}"]${reqStr}(${bboxStr});\\n`;
       }
-      queryBody += `  nwr${tagStr}(${bboxStr});\n`;
+    } else {
+      // If the LLM only gave required attributes (e.g. "find any place that is vegetarian")
+      queryBody += `  nwr${reqStr}(${bboxStr});\\n`;
     }
 
-    // The query requests JSON, defines a strict server-side timeout, and uses 'out center' 
-    // to retrieve centroid coordinates for ways and relations.
-    const query = `[out:json][timeout:${timeoutSec}];\n(\n${queryBody});\nout center;`;
+    const query = `[out:json][timeout:${timeoutSec}];\\n(\\n${queryBody});\\nout center;`;
 
     const endpoints = [
       options.endpoint || envConfig.overpassEndpoint,
-      'https://maps.mail.ru/osm/tools/overpass/api/interpreter', // Russian server (often does not block cloud IPs)
-      'https://overpass.osm.ch/api/interpreter', // Swiss server
+      'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+      'https://overpass.osm.ch/api/interpreter',
       'https://lz4.overpass-api.de/api/interpreter',
       'https://overpass.kumi.systems/api/interpreter'
     ];
@@ -71,9 +65,7 @@ class OverpassService {
           signal: AbortSignal.timeout(timeoutMs)
         });
 
-        if (response.ok) {
-          break; // Success!
-        }
+        if (response.ok) break;
         
         if (response.status === 429) {
           lastError = new Error('Overpass API rate limit exceeded.');
@@ -93,7 +85,6 @@ class OverpassService {
       throw lastError || new Error('Overpass API requests failed on all endpoints.');
     }
 
-    // 4. Parse and normalize results
     const data = await response.json().catch(() => null);
     if (!data || !Array.isArray(data.elements)) {
       throw new Error('Malformed provider data: expected a JSON response with an elements array.');
@@ -103,12 +94,10 @@ class OverpassService {
     const normalizedPlaces = [];
 
     for (const el of data.elements) {
-      // Deduplicate elements using stable OSM identity
       const idKey = `${el.type}-${el.id}`;
       if (seen.has(idKey)) continue;
       seen.add(idKey);
 
-      // Extract coordinates safely
       let lat = null;
       let lon = null;
       
@@ -125,11 +114,8 @@ class OverpassService {
       const tags = el.tags || {};
       const placeName = tags.name || tags['name:en'] || tags.brand || tags.operator || tags.network || null;
 
-      // Filter out completely unnamed nodes (e.g. random bus stop poles without names/operators)
-      // The user wants recognized, trustworthy places.
       if (!placeName) continue;
 
-      // Ensure no ratings, reviews, or unverified operational statuses are generated.
       normalizedPlaces.push({
         osmType: el.type,
         osmId: el.id,

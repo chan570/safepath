@@ -18,45 +18,59 @@ class MultiStopItineraryService {
    * @param {Object} originCoords - {lat, lon}
    * @param {Object} destCoords - {lat, lon}
    * @param {Object} baselineRoute - Must contain durationSeconds
-   * @param {Array<Object>} orderedCategoryGroups - Array of { category: string, candidates: Array }
+   * @param {Array<Object>} stopRequirementGroups - Array of { userRequirement: string, candidates: Array }
    * @param {Array<string>} stopOrderRequirements - Raw LLM extracted order constraints
    * @param {Object} globalConstraints - Global prompt constraints (e.g., maxAdditionalDrivingTime)
    */
-  static async buildItinerary(originCoords, destCoords, baselineRoute, orderedCategoryGroups, stopOrderRequirements, globalConstraints) {
-    if (!orderedCategoryGroups || orderedCategoryGroups.length === 0) {
-      return { status: 'error', message: 'No categories provided for itinerary.' };
+  static async buildItinerary(originCoords, destCoords, baselineRoute, stopRequirementGroups, stopOrderRequirements, globalConstraints) {
+    if (!stopRequirementGroups || stopRequirementGroups.length === 0) {
+      return { status: 'error', message: 'No requirements provided for itinerary.' };
     }
 
-    // 1. Enforce Explicit Order Rules
-    if (orderedCategoryGroups.length > 1) {
-      if (!Array.isArray(stopOrderRequirements) || stopOrderRequirements.length === 0) {
-        return { 
-          status: 'clarification_required', 
-          ambiguities: ['Multiple stops were requested, but the sequence is ambiguous. Please specify which place to visit first.'] 
-        };
+    // 1. Enforce Explicit Order Rules or Generate Sequence Permutations
+    let sequencePermutations = [stopRequirementGroups]; // Default to user's provided order
+    
+    if (stopRequirementGroups.length > 1) {
+      const needsOrder = !Array.isArray(stopOrderRequirements) || stopOrderRequirements.length === 0;
+      if (needsOrder) {
+        // If they ask for 4+ stops with no order, that's up to 24+ permutations of sequence, each with 3^4=81 combos (1944 routes).
+        // Let's cap unbounded sequencing to 3 stops (6 permutations * 27 combos = 162 routes maximum, usually far fewer due to limits).
+        if (stopRequirementGroups.length > 3) {
+          return { 
+            status: 'clarification_required', 
+            ambiguities: ['Multiple stops were requested, but the sequence is ambiguous. Please specify which place to visit first.'] 
+          };
+        }
+        sequencePermutations = this._generateGroupSequencePermutations(stopRequirementGroups);
       }
     }
 
     // 2. Prevent missing links
-    for (const group of orderedCategoryGroups) {
+    for (const group of stopRequirementGroups) {
       if (!group.candidates || group.candidates.length === 0) {
         return {
           status: 'error',
-          message: `No eligible candidates available to satisfy the '${group.category}' stop.`
+          message: `No eligible candidates available to satisfy the requested stop.`
         };
       }
     }
 
-    // 3. Build Permutations (bounded to top 3 candidates per stop to respect API limits)
-    const limitedGroups = orderedCategoryGroups.map(g => g.candidates.slice(0, 3));
-    const permutations = this._generatePermutations(limitedGroups);
+    // 3. Build Permutations (bounded to top 2-3 candidates per stop to respect API limits)
+    const maxCandidatesPerGroup = sequencePermutations.length > 1 ? 2 : 3; // Limit deeper if doing multiple sequences
+    let allCombos = [];
+    
+    for (const seq of sequencePermutations) {
+      const limitedGroups = seq.map(g => g.candidates.slice(0, maxCandidatesPerGroup));
+      const combosForSeq = this._generateCartesianProduct(limitedGroups);
+      allCombos.push(...combosForSeq);
+    }
 
     const concurrencyLimit = envConfig.maxExternalRequestsPerWorkflow || 5;
     const evaluatedItineraries = [];
 
     // 4. Batch route the complete sequence for each permutation
-    for (let i = 0; i < permutations.length; i += concurrencyLimit) {
-      const batch = permutations.slice(i, i + concurrencyLimit);
+    for (let i = 0; i < allCombos.length; i += concurrencyLimit) {
+      const batch = allCombos.slice(i, i + concurrencyLimit);
       
       const batchPromises = batch.map(async (combo) => {
         // Prevent duplicate physical stops (e.g. using a location that is both a gas station and a store twice)
@@ -123,9 +137,9 @@ class MultiStopItineraryService {
   }
 
   /**
-   * Helper to compute cartesian product permutations recursively.
+   * Helper to compute cartesian product of arrays.
    */
-  static _generatePermutations(arrays, current = [], result = []) {
+  static _generateCartesianProduct(arrays, current = [], result = []) {
     if (arrays.length === 0) {
       result.push([...current]);
       return result;
@@ -133,8 +147,25 @@ class MultiStopItineraryService {
     const [first, ...rest] = arrays;
     for (const item of first) {
       current.push(item);
-      this._generatePermutations(rest, current, result);
+      this._generateCartesianProduct(rest, current, result);
       current.pop();
+    }
+    return result;
+  }
+
+  /**
+   * Helper to generate all sequence permutations of an array.
+   */
+  static _generateGroupSequencePermutations(arr) {
+    if (arr.length <= 1) return [arr];
+    const result = [];
+    for (let i = 0; i < arr.length; i++) {
+      const current = arr[i];
+      const remaining = arr.slice(0, i).concat(arr.slice(i + 1));
+      const remainingPermutations = this._generateGroupSequencePermutations(remaining);
+      for (let j = 0; j < remainingPermutations.length; j++) {
+        result.push([current].concat(remainingPermutations[j]));
+      }
     }
     return result;
   }

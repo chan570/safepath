@@ -2,7 +2,6 @@ const Ajv = require('ajv');
 const ajv = new Ajv();
 const OllamaService = require('./ollamaService');
 const promptSchema = require('../utils/promptSchema');
-const { resolveCategory, getAllSupportedAliases } = require('../utils/categoryMapper');
 
 const validateSchema = ajv.compile(promptSchema);
 
@@ -18,12 +17,14 @@ Output strict JSON matching this exact schema structure:
   "numberOfStopsRequested": number or null,
   "requestedPlaces": [
     {
-      "category": "string (Display name, e.g. ISBT, ATM, Bakery) or null",
-      "osmTags": [{"key": "amenity|shop|tourism|etc", "value": "exact_osm_value"}],
-      "hardConstraints": ["array of strings"],
-      "softPreferences": ["array of strings"],
+      "userRequirement": "string or null (e.g., 'T point', 'place for chai')",
+      "semanticIntent": "string or null (e.g., 'A roadside establishment suitable for drinking tea and having light food/snacks')",
+      "requirements": ["array of strings representing pure semantic capabilities (e.g. 'tea', 'light food', 'phone charging', 'bicycle repair')"],
+      "confidence": number (0.0 to 1.0),
+      "hardConstraints": [{"type": "string (e.g. 'diet', 'accessibility')", "value": "string/number/boolean"}],
+      "softPreferences": [{"type": "string (e.g. 'minimize_additional_driving_time', 'scenic')", "weight": "number (0.1-1.0)"}],
       "ratingThreshold": { "value": number, "operator": ">|>=|<|<=|==" } or null,
-      "proximityPreference": "string ('origin', 'destination', 'any'). Default to 'origin' if unspecified."
+      "proximityPreference": "string ('origin', 'destination', 'on_the_way', 'any'). Default to 'on_the_way' if unspecified."
     }
   ],
   "maxAdditionalDrivingTime": { "value": number, "unit": "minutes|hours" } or null,
@@ -32,10 +33,12 @@ Output strict JSON matching this exact schema structure:
   "unsupportedRequirements": ["things you can't fulfill"]
 }
 
-You are an expert at mapping natural language to OpenStreetMap tags. 
-CRITICAL: You must understand the deep semantic context of the user's request, including regional terms (like 'kirana shop', 'dhaba') or intent (like 'sweet shop', 'place to relax'). Do not rely on literal keyword matching! Understand what the user wants and map it to the correct official OSM tags (e.g. 'kirana shop' -> shop=convenience/general, 'sweet shop' -> shop=confectionery/pastry).
-OSM tagging is inconsistent, so you MUST provide an array of MULTIPLE synonymous OSM key-value tags in 'osmTags' to ensure maximum recall (e.g., for "bus stand", provide [{"key":"amenity","value":"bus_station"}, {"key":"highway","value":"bus_stop"}]).
+You are an expert at understanding semantic travel intents. 
+CRITICAL: You must extract the pure *meaning* of what the user wants to do or find. DO NOT use predefined database categories (e.g. do not just output 'tea_shop' or 'restaurant'). Break down the user's request into discrete semantic capabilities in the 'requirements' array (e.g. ['tea', 'food', 'Wi-Fi']).
+Do not rely on literal keyword matching! Do not fail just because a term is unknown. Try to interpret the intended meaning.
+
 If origin or destination is missing, add an explanation to "ambiguities".
+If the prompt is genuinely ambiguous and you cannot infer a reasonable intent (e.g. 'Find me a nice place'), add to "ambiguities".
 
 CRITICAL INSTRUCTION: Your output MUST be EXACTLY ONE valid JSON object and nothing else. DO NOT wrap it in Markdown fences (like \`\`\`json). DO NOT output conversational text before or after the JSON.`;
 
@@ -126,7 +129,7 @@ class PromptService {
     }
     
     // 4. Determine state
-    if (parsed.ambiguities.length > 0 || parsed.unsupportedRequirements.length > 0) {
+    if (parsed.ambiguities.length > 0) {
       return {
         status: 'clarification_required',
         ambiguities: parsed.ambiguities,

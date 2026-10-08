@@ -28,7 +28,7 @@ const ItineraryDetails = ({ item, responseType, baselineRoute }) => {
                  <li className="leg-info">
                    â†“ Drive {segmentTime !== null ? formatDuration(segmentTime) : 'segment limitation (unknown)'}
                  </li>
-                 <li><strong>{stop.name || 'Unnamed Stop'}</strong> ({stop.category})</li>
+                 <li><strong>{stop.name || 'Unnamed Stop'}</strong> ({stop.userRequirement})</li>
                </React.Fragment>
              );
            })}
@@ -60,7 +60,7 @@ const ItineraryDetails = ({ item, responseType, baselineRoute }) => {
           â†“ Drive {item.originToPlaceDurationSeconds !== undefined ? formatDuration(item.originToPlaceDurationSeconds) : 'segment limitation (unknown)'}
         </li>
         <li>
-          <strong>{item.name || 'Unnamed Place'}</strong> ({item.category})
+          <strong>{item.name || 'Unnamed Place'}</strong> ({item.userRequirement})
           {item.tags && item.tags['addr:city'] && <span className="address-tag">, {item.tags['addr:city']}</span>}
         </li>
         <li className="leg-info">
@@ -83,6 +83,15 @@ const RouteResults = ({ appState, routes = [], baselineRoute, responseType, meta
     return (
       <div className="results-panel empty-state">
         <p>Results will appear here.</p>
+      </div>
+    );
+  }
+
+  if (appState === 'clarification') {
+    return (
+      <div className="results-panel empty-state" style={{ padding: '20px', textAlign: 'center' }}>
+        <p style={{ color: '#d93025', fontWeight: 'bold' }}>Clarification Required</p>
+        <p>Your prompt was ambiguous. Please provide more specific details (e.g., if requesting multiple stops, specify the exact order you want to visit them).</p>
       </div>
     );
   }
@@ -117,14 +126,7 @@ const RouteResults = ({ appState, routes = [], baselineRoute, responseType, meta
       
 
 
-      {metadata && metadata.unsupportedAttributes && metadata.unsupportedAttributes.length > 0 && (
-        <div className="unsupported-attributes">
-          <strong>Note:</strong> Some constraints could not be verified:
-          <ul>
-            {metadata.unsupportedAttributes.map((attr, idx) => <li key={idx}><small>{attr}</small></li>)}
-          </ul>
-        </div>
-      )}
+
 
       {responseType === 'baseline_only' && (
         <div className="route-item selected">
@@ -158,7 +160,7 @@ const RouteResults = ({ appState, routes = [], baselineRoute, responseType, meta
               >
                 <div className="route-info">
                   <strong>Itinerary {index + 1}</strong>
-                  <div>Stops: {item.orderedStops.map(s => s.name || s.category).join(' → ')}</div>
+                  <div>Stops: {item.orderedStops.map(s => s.name || s.userRequirement).join(' → ')}</div>
                   {!isSelected && (
                     <div className="short-summary">Extra Driving Time (Car): +{formatDuration(item.additionalDurationSeconds)}</div>
                   )}
@@ -183,7 +185,7 @@ const RouteResults = ({ appState, routes = [], baselineRoute, responseType, meta
             >
               <div className="route-info">
                 <strong>{item.name || 'Unnamed Place'}</strong>
-                <div className="route-category">{item.category}</div>
+                <div className="route-category">{item.userRequirement}</div>
                 {!isSelected && (
                   <div className="short-summary">Extra Driving Time (Car): +{formatDuration(item.additionalDurationSeconds)}</div>
                 )}

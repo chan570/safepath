@@ -29,9 +29,6 @@ class WorkflowOrchestratorService {
       if (!intent.origin || !intent.destination) {
         return { status: 'clarification_required', ambiguities: ['Origin and destination are strictly required.'] };
       }
-      if (intent.requestedPlaces && intent.requestedPlaces.some(rp => rp.ratingThreshold)) {
-        return { status: 'unsupported_constraint', message: 'Requested rating threshold is unverifiable.' };
-      }
       if (intent.requestedPlaces && intent.requestedPlaces.length > 3) {
         return { status: 'unsupported_constraint', message: 'You can request a maximum of 3 different stops in a single journey to ensure fast route processing.' };
       }
@@ -57,18 +54,19 @@ class WorkflowOrchestratorService {
 
       // MULTI-STOP
       if (intent.requestedPlaces.length > 1) {
-        const orderedCategoryGroups = [];
+        const stopRequirementGroups = [];
         const tSearchStart = performance.now();
         for (const reqPlace of intent.requestedPlaces) {
           const searchResult = await PlaceSearchService.searchPlacesAlongRoute(routeGeometry, [reqPlace]);
-          orderedCategoryGroups.push({ category: reqPlace.category, candidates: searchResult.candidates });
+          const displayName = reqPlace.userRequirement || 'Place';
+          stopRequirementGroups.push({ userRequirement: displayName, candidates: searchResult.candidates });
         }
         const tSearchMs = performance.now() - tSearchStart;
         
         const tItineraryStart = performance.now();
         const itineraryResult = await MultiStopItineraryService.buildItinerary(
           baselineRoute.origin, baselineRoute.destination, baselineRoute, 
-          orderedCategoryGroups, intent.stopOrderRequirements, globalConstraints
+          stopRequirementGroups, intent.stopOrderRequirements, globalConstraints
         );
         const tItineraryMs = performance.now() - tItineraryStart;
         
@@ -88,13 +86,14 @@ class WorkflowOrchestratorService {
       
       // SINGLE-STOP
       const reqPlace = intent.requestedPlaces[0];
+      const displayName = reqPlace.userRequirement || 'Place';
       
       const tSearchStart = performance.now();
       const searchResult = await PlaceSearchService.searchPlacesAlongRoute(routeGeometry, [reqPlace]);
       const tSearchMs = performance.now() - tSearchStart;
       
       if (searchResult.candidates.length === 0) {
-          return { status: 'no_results', message: `No eligible '${reqPlace.category}' found.` };
+          return { status: 'no_results', message: `No eligible '${displayName}' found.` };
       }
 
       const tRouteStart = performance.now();

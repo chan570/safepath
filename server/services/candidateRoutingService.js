@@ -1,5 +1,6 @@
 const OSRMService = require('./osrmService');
 const envConfig = require('../config/env');
+const turf = require('@turf/turf');
 
 /**
  * CandidateRoutingService
@@ -104,20 +105,27 @@ class CandidateRoutingService {
     };
 
     // Pre-sort candidates by heuristic distance to ensure we slice the MOST RELEVANT ones.
-    const pref = reqPlace.proximityPreference || 'origin';
+    const pref = reqPlace.proximityPreference || 'route';
     const sortedCandidates = [...candidates].sort((a, b) => {
-      let targetLat, targetLon;
+      const ptA = turf.point([a.lon, a.lat]);
+      const ptB = turf.point([b.lon, b.lat]);
+      let distA, distB;
+
       if (pref === 'origin') {
-        targetLat = originCoords.lat; targetLon = originCoords.lon;
+        const targetPt = turf.point([originCoords.lon, originCoords.lat]);
+        distA = turf.distance(ptA, targetPt, { units: 'kilometers' });
+        distB = turf.distance(ptB, targetPt, { units: 'kilometers' });
       } else if (pref === 'destination') {
-        targetLat = destCoords.lat; targetLon = destCoords.lon;
+        const targetPt = turf.point([destCoords.lon, destCoords.lat]);
+        distA = turf.distance(ptA, targetPt, { units: 'kilometers' });
+        distB = turf.distance(ptB, targetPt, { units: 'kilometers' });
       } else {
-        targetLat = (originCoords.lat + destCoords.lat) / 2;
-        targetLon = (originCoords.lon + destCoords.lon) / 2;
+        // default to 'route' (on the way)
+        const line = turf.lineString(baselineRoute.geometry.coordinates);
+        distA = turf.pointToLineDistance(ptA, line, { units: 'kilometers' });
+        distB = turf.pointToLineDistance(ptB, line, { units: 'kilometers' });
       }
       
-      const distA = Math.hypot(a.lat - targetLat, a.lon - targetLon);
-      const distB = Math.hypot(b.lat - targetLat, b.lon - targetLon);
       return distA - distB;
     });
 
