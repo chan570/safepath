@@ -70,18 +70,20 @@ class PromptService {
 
     let contextualPrompt = userPrompt;
     if (context.resolvedOrigin) {
-      contextualPrompt = `Origin: ${context.resolvedOrigin}\n` + contextualPrompt;
+      const o = typeof context.resolvedOrigin === 'object' ? JSON.stringify(context.resolvedOrigin) : context.resolvedOrigin;
+      contextualPrompt = `Origin: ${o}\n` + contextualPrompt;
     }
     if (context.resolvedDestination) {
-      contextualPrompt = `Destination: ${context.resolvedDestination}\n` + contextualPrompt;
+      const d = typeof context.resolvedDestination === 'object' ? JSON.stringify(context.resolvedDestination) : context.resolvedDestination;
+      contextualPrompt = `Destination: ${d}\n` + contextualPrompt;
     }
 
     const baseFullPrompt = `${SYSTEM_PROMPT}\n\nUser Request: "${contextualPrompt}"\n\nOutput only valid JSON:`;
     
-    return await this._attemptParse(baseFullPrompt, 0);
+    return await this._attemptParse(baseFullPrompt, 0, context);
   }
 
-  static async _attemptParse(fullPrompt, attempt) {
+  static async _attemptParse(fullPrompt, attempt, context) {
     let rawOutput;
     try {
       rawOutput = await OllamaService.generateText(fullPrompt, { format: 'json' });
@@ -121,11 +123,21 @@ class PromptService {
     // We trust the osmTags provided by the AI.
 
     // 3. Safety checks for essential missing fields preventing calculation
-    if (!parsed.origin && !parsed.ambiguities.some(a => a.toLowerCase().includes('origin'))) {
+    const hasOrigin = parsed.origin || (context && context.resolvedOrigin);
+    const hasDest = parsed.destination || (context && context.resolvedDestination);
+
+    if (!hasOrigin && !parsed.ambiguities.some(a => a.toLowerCase().includes('origin'))) {
       parsed.ambiguities.push('Origin location is missing or ambiguous.');
     }
-    if (!parsed.destination && !parsed.ambiguities.some(a => a.toLowerCase().includes('destination'))) {
+    if (!hasDest && !parsed.ambiguities.some(a => a.toLowerCase().includes('destination'))) {
       parsed.ambiguities.push('Destination location is missing or ambiguous.');
+    }
+
+    if (hasOrigin) {
+      parsed.ambiguities = parsed.ambiguities.filter(a => !a.toLowerCase().includes('origin'));
+    }
+    if (hasDest) {
+      parsed.ambiguities = parsed.ambiguities.filter(a => !a.toLowerCase().includes('destination'));
     }
     
     // 4. Determine state

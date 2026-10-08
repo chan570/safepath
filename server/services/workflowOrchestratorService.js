@@ -34,7 +34,9 @@ class WorkflowOrchestratorService {
       }
 
       const intent = promptResult.data; 
-      if (!intent.origin || !intent.destination) {
+      const hasOrigin = userRequest.resolvedOrigin || intent.origin;
+      const hasDest = userRequest.resolvedDestination || intent.destination;
+      if (!hasOrigin || !hasDest) {
         return { status: 'clarification_required', ambiguities: ['Origin and destination are strictly required.'] };
       }
       if (intent.requestedPlaces && intent.requestedPlaces.length > 3) {
