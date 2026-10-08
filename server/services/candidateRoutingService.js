@@ -17,7 +17,7 @@ class CandidateRoutingService {
    * @param {Array<Object>} candidates - Array of normalized OSM candidate places
    * @returns {Promise<Object>} An object containing arrays of `routable` and `unroutable` candidates.
    */
-  static async calculateCandidateRoutes(originCoords, destCoords, baselineRoute, candidates, reqPlace = {}) {
+  static async calculateCandidateRoutes(originCoords, destCoords, baselineRoute, candidates, reqPlace = {}, metrics = null) {
     if (!baselineRoute || typeof baselineRoute.durationSeconds !== 'number' || typeof baselineRoute.distanceMeters !== 'number') {
       throw new Error('Valid baseline route data is required.');
     }
@@ -35,7 +35,7 @@ class CandidateRoutingService {
         return cache.get(key);
       }
       
-      const promise = OSRMService.getDrivingRoute([startCoord, endCoord], { includeGeometry: false }).catch(err => {
+      const promise = OSRMService.getDrivingRoute([startCoord, endCoord], { includeGeometry: false, metrics }).catch(err => {
         return { error: err.message };
       });
       cache.set(key, promise);
@@ -107,6 +107,10 @@ class CandidateRoutingService {
     if (sortedCandidates.length > envConfig.maxCandidatesToProcess) {
       candidatesToProcess = sortedCandidates.slice(0, envConfig.maxCandidatesToProcess);
       limitExceeded = true;
+    }
+
+    if (metrics) {
+      metrics.candidatesSentToOsrm = (metrics.candidatesSentToOsrm || 0) + candidatesToProcess.length;
     }
 
     const processCandidate = async (candidate) => {

@@ -22,7 +22,7 @@ class MultiStopItineraryService {
    * @param {Array<string>} stopOrderRequirements - Raw LLM extracted order constraints
    * @param {Object} globalConstraints - Global prompt constraints (e.g., maxAdditionalDrivingTime)
    */
-  static async buildItinerary(originCoords, destCoords, baselineRoute, stopRequirementGroups, stopOrderRequirements, globalConstraints) {
+  static async buildItinerary(originCoords, destCoords, baselineRoute, stopRequirementGroups, stopOrderRequirements, globalConstraints, metrics = null) {
     if (!stopRequirementGroups || stopRequirementGroups.length === 0) {
       return { status: 'error', message: 'No requirements provided for itinerary.' };
     }
@@ -104,6 +104,10 @@ class MultiStopItineraryService {
     const evaluatedItineraries = [];
     const activePromises = new Set();
 
+    if (metrics) {
+      metrics.multiStopCombinationsEvaluated = (metrics.multiStopCombinationsEvaluated || 0) + allCombos.length;
+    }
+
     // 4. Process sliding window concurrency for combos
     const processCombo = async (combo) => {
         // Prevent duplicate physical stops
@@ -119,7 +123,7 @@ class MultiStopItineraryService {
         ];
         
         try {
-          const route = await OSRMService.getDrivingRoute(routeCoords, { includeGeometry: false });
+          const route = await OSRMService.getDrivingRoute(routeCoords, { includeGeometry: false, metrics });
           const tExtra = route.durationSeconds - baselineRoute.durationSeconds;
 
           if (globalConstraints && globalConstraints.maxAdditionalDrivingTime) {
@@ -176,7 +180,7 @@ class MultiStopItineraryService {
         destCoords
       ];
       try {
-        const route = await OSRMService.getDrivingRoute(routeCoords, { includeGeometry: true });
+        const route = await OSRMService.getDrivingRoute(routeCoords, { includeGeometry: true, metrics });
         itinerary.geometry = route.geometry;
       } catch (err) {
         console.warn('[MultiStopItineraryService] Failed to fetch full geometry:', err.message);

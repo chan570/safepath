@@ -19,6 +19,10 @@ class OSRMService {
    * @returns {Promise<Object>} Normalized route details containing distance (meters), duration (seconds), and GeoJSON geometry.
    */
   static async getDrivingRoute(coordinates, options = {}) {
+    if (options.metrics) {
+      options.metrics.osrmRequests = (options.metrics.osrmRequests || 0) + 1;
+    }
+    
     if (!Array.isArray(coordinates) || coordinates.length < 2) {
       throw new Error('At least two valid coordinates are required to calculate a route.');
     }

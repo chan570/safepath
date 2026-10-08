@@ -10,7 +10,7 @@ const OsmTranslationService = require('./osmTranslationService');
  * Translates semantic requirements dynamically into OSM tags using OsmTranslationService.
  */
 class PlaceSearchService {
-  static async searchPlacesAlongRoute(routeGeometry, requestedPlaces) {
+  static async searchPlacesAlongRoute(routeGeometry, requestedPlaces, metrics = null) {
     if (!routeGeometry || routeGeometry.type !== 'LineString' || !Array.isArray(routeGeometry.coordinates) || routeGeometry.coordinates.length < 2) {
       throw new Error('Invalid route geometry provided.');
     }
@@ -70,7 +70,7 @@ class PlaceSearchService {
               places = queryCache.get(cacheKey);
             } else {
               // Removed artificial 200ms delay.
-              places = await OverpassService.fetchPlaces(translation.searchAlternatives, translation.requiredAttributes, bbox);
+              places = await OverpassService.fetchPlaces(translation.searchAlternatives, translation.requiredAttributes, bbox, { metrics });
               queryCache.set(cacheKey, places);
             }
             return places;

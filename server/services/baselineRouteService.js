@@ -45,8 +45,10 @@ class BaselineRouteService {
       return { error: `Invalid ${label} input format.` };
     };
 
+    const tGeoStart = Date.now();
     const originRes = await resolveLocation(origin, 'origin');
     const destRes = await resolveLocation(destination, 'destination');
+    const tGeocodingMs = Date.now() - tGeoStart;
 
     const errors = [];
     const ambiguities = [];
@@ -73,11 +75,12 @@ class BaselineRouteService {
       const route = await OSRMService.getDrivingRoute([
         { lat: originCoords.lat, lon: originCoords.lon },
         { lat: destCoords.lat, lon: destCoords.lon }
-      ]);
+      ], { metrics: arguments[2] }); // Pass metrics if provided
 
       // Returns GeoJSON geometry which is natively supported by React Leaflet (<GeoJSON data={geometry} />)
       return {
         status: 'success',
+        tGeocodingMs,
         route: {
           ...route,
           origin: originCoords,

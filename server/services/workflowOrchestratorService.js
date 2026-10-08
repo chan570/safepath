@@ -9,6 +9,14 @@ const MultiStopItineraryService = require('./multiStopItineraryService');
 class WorkflowOrchestratorService {
   static async planRoute(userRequest) {
     const tStart = performance.now();
+    const metrics = {
+      overpassRequests: 0,
+      osmCandidatesFound: 0,
+      candidatesSentToOsrm: 0,
+      osrmRequests: 0,
+      multiStopCombinationsEvaluated: 0
+    };
+
     try {
       // 1-3. Prompt Interpretation
       const tPromptStart = performance.now();
@@ -37,7 +45,7 @@ class WorkflowOrchestratorService {
       const tBaselineStart = performance.now();
       const originInput = userRequest.resolvedOrigin || intent.origin;
       const destInput = userRequest.resolvedDestination || intent.destination;
-      const baselineResult = await BaselineRouteService.getBaselineRoute(originInput, destInput);
+      const baselineResult = await BaselineRouteService.getBaselineRoute(originInput, destInput, metrics);
       const tBaselineMs = performance.now() - tBaselineStart;
       
       if (baselineResult.status === 'clarification_required') return baselineResult; 
@@ -56,24 +64,45 @@ class WorkflowOrchestratorService {
       if (intent.requestedPlaces.length > 1) {
         const tSearchStart = performance.now();
         // Run independent multi-stop place searches concurrently using the array mode
-        const searchResults = await PlaceSearchService.searchPlacesAlongRoute(routeGeometry, intent.requestedPlaces);
-        const stopRequirementGroups = searchResults.map(res => ({
-          userRequirement: res.userRequirement,
-          candidates: res.candidates
-        }));
+        const searchResults = await PlaceSearchService.searchPlacesAlongRoute(routeGeometry, intent.requestedPlaces, metrics);
+        const stopRequirementGroups = searchResults.map(res => {
+          metrics.osmCandidatesFound += (res.candidates || []).length;
+          return {
+            userRequirement: res.userRequirement,
+            candidates: res.candidates
+          };
+        });
         const tSearchMs = performance.now() - tSearchStart;
         
         const tItineraryStart = performance.now();
         const itineraryResult = await MultiStopItineraryService.buildItinerary(
           baselineRoute.origin, baselineRoute.destination, baselineRoute, 
-          stopRequirementGroups, intent.stopOrderRequirements, globalConstraints
+          stopRequirementGroups, intent.stopOrderRequirements, globalConstraints, metrics
         );
         const tItineraryMs = performance.now() - tItineraryStart;
         
         if (itineraryResult.status === 'clarification_required') return { status: 'clarification_required', ambiguities: itineraryResult.ambiguities };
         if (itineraryResult.status === 'error') return { status: 'no_results', message: itineraryResult.message };
 
-        console.log(`[Perf] Multi-stop complete in ${Math.round(performance.now() - tStart)}ms (Prompt: ${Math.round(tPromptMs)}ms, Base: ${Math.round(tBaselineMs)}ms, Search: ${Math.round(tSearchMs)}ms, Itinerary: ${Math.round(tItineraryMs)}ms)`);
+        const totalMs = Math.round(performance.now() - tStart);
+        const tGeocodingMs = Math.round(baselineResult.tGeocodingMs || 0);
+        const tBaseMs = Math.round(tBaselineMs - tGeocodingMs);
+
+        console.log(`
+[Perf Metrics] Total Response Time: ${totalMs}ms
+- Prompt: ${Math.round(tPromptMs)}ms
+- Geocoding: ${tGeocodingMs}ms
+- Baseline route: ${tBaseMs}ms
+- OSM search: ${Math.round(tSearchMs)}ms
+- OSRM routing/Ranking (Multi-stop): ${Math.round(tItineraryMs)}ms
+
+[External API Calls]
+- Overpass requests: ${metrics.overpassRequests}
+- OSM candidates found: ${metrics.osmCandidatesFound}
+- Candidates sent to OSRM: ${metrics.candidatesSentToOsrm}
+- OSRM requests: ${metrics.osrmRequests}
+- Multi-stop combinations evaluated: ${metrics.multiStopCombinationsEvaluated}
+`);
 
         return {
            status: 'success',
@@ -89,7 +118,8 @@ class WorkflowOrchestratorService {
       const displayName = reqPlace.userRequirement || 'Place';
       
       const tSearchStart = performance.now();
-      const searchResult = await PlaceSearchService.searchPlacesAlongRoute(routeGeometry, [reqPlace]);
+      const searchResult = await PlaceSearchService.searchPlacesAlongRoute(routeGeometry, [reqPlace], metrics);
+      metrics.osmCandidatesFound += (searchResult.candidates || []).length;
       const tSearchMs = performance.now() - tSearchStart;
       
       if (searchResult.candidates.length === 0) {
@@ -98,7 +128,7 @@ class WorkflowOrchestratorService {
 
       const tRouteStart = performance.now();
       const routingResult = await CandidateRoutingService.calculateCandidateRoutes(
-        baselineRoute.origin, baselineRoute.destination, baselineRoute, searchResult.candidates, reqPlace
+        baselineRoute.origin, baselineRoute.destination, baselineRoute, searchResult.candidates, reqPlace, metrics
       );
       const tRouteMs = performance.now() - tRouteStart;
 
@@ -124,7 +154,6 @@ class WorkflowOrchestratorService {
       }
 
       // OPTIMIZATION: Fetch detailed GeoJSON geometries ONLY for the top 3 winning candidates.
-      // Fetch final top-candidate route geometries concurrently instead of sequentially.
       const OSRMService = require('./osrmService');
       const originCoords = baselineRoute.origin;
       const destCoords = baselineRoute.destination;
@@ -134,8 +163,8 @@ class WorkflowOrchestratorService {
         const candidateCoords = { lat: candidate.lat, lon: candidate.lon };
         try {
           const [r1, r2] = await Promise.all([
-            OSRMService.getDrivingRoute([originCoords, candidateCoords], { includeGeometry: true }),
-            OSRMService.getDrivingRoute([candidateCoords, destCoords], { includeGeometry: true })
+            OSRMService.getDrivingRoute([originCoords, candidateCoords], { includeGeometry: true, metrics }),
+            OSRMService.getDrivingRoute([candidateCoords, destCoords], { includeGeometry: true, metrics })
           ]);
           candidate.route1Geometry = r1.geometry;
           candidate.route2Geometry = r2.geometry;
@@ -145,7 +174,28 @@ class WorkflowOrchestratorService {
       }));
       const tGeoMs = performance.now() - tGeoStart;
 
-      console.log(`[Perf] Single-stop complete in ${Math.round(performance.now() - tStart)}ms (Prompt: ${Math.round(tPromptMs)}ms, Base: ${Math.round(tBaselineMs)}ms, Search: ${Math.round(tSearchMs)}ms, Route: ${Math.round(tRouteMs)}ms, Rank: ${Math.round(tRankMs)}ms, Geo: ${Math.round(tGeoMs)}ms)`);
+      const totalMs = Math.round(performance.now() - tStart);
+      const tGeocodingMs = Math.round(baselineResult.tGeocodingMs || 0);
+      const tBaseMs = Math.round(tBaselineMs - tGeocodingMs);
+
+      console.log(`
+[Perf Metrics] Total Response Time: ${totalMs}ms
+- Prompt: ${Math.round(tPromptMs)}ms
+- Geocoding: ${tGeocodingMs}ms
+- Baseline route: ${tBaseMs}ms
+- OSM search: ${Math.round(tSearchMs)}ms
+- Candidate pruning: (Included natively via fast Turf calculations before routing)
+- OSRM routing: ${Math.round(tRouteMs)}ms
+- Ranking: ${Math.round(tRankMs)}ms
+- Final geometry: ${Math.round(tGeoMs)}ms
+
+[External API Calls]
+- Overpass requests: ${metrics.overpassRequests}
+- OSM candidates found: ${metrics.osmCandidatesFound}
+- Candidates sent to OSRM: ${metrics.candidatesSentToOsrm}
+- OSRM requests: ${metrics.osrmRequests}
+- Multi-stop combinations evaluated: ${metrics.multiStopCombinationsEvaluated}
+`);
 
       return {
         status: 'success',

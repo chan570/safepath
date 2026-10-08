@@ -12,6 +12,10 @@ class OverpassService {
    * @returns {Promise<Array>} Array of normalized POI objects.
    */
   static async fetchPlaces(searchAlternatives, requiredAttributes, bbox, options = {}) {
+    if (options.metrics) {
+      options.metrics.overpassRequests = (options.metrics.overpassRequests || 0) + 1;
+    }
+    
     if ((!Array.isArray(searchAlternatives) || searchAlternatives.length === 0) &&
         (!Array.isArray(requiredAttributes) || requiredAttributes.length === 0)) {
       throw new Error('Invalid or missing OSM tags for place search');
