@@ -55,25 +55,58 @@ class MultiStopItineraryService {
       }
     }
 
-    // 3. Build Permutations (bounded to top 2-3 candidates per stop to respect API limits)
-    const maxCandidatesPerGroup = sequencePermutations.length > 1 ? 2 : 3; // Limit deeper if doing multiple sequences
+    // Heuristic Pre-scoring (matches CandidateRoutingService logic)
+    const computePreScore = (candidate) => {
+      let score = 0;
+      const tags = candidate.tags || {};
+      const searchAlts = candidate.searchAlternatives || [];
+      const reqAttrs = candidate.requiredAttributes || [];
+      if (searchAlts.length > 0) {
+        if (searchAlts.some(alt => tags[alt.key] === alt.value)) score += 10;
+        else if (searchAlts.some(alt => Object.values(tags).includes(alt.value))) score += 5;
+      } else {
+        score += 5;
+      }
+      if (reqAttrs.length > 0) {
+        reqAttrs.forEach(attr => {
+          if (tags[attr.key] === attr.value) score += 3;
+          else if (Object.values(tags).includes(attr.value)) score += 1;
+        });
+      }
+      return score;
+    };
+
+    // 3. Build Permutations (bounded to top 2-3 aggressively scored candidates per stop)
+    const maxCandidatesPerGroup = sequencePermutations.length > 1 ? 2 : 3;
     let allCombos = [];
     
     for (const seq of sequencePermutations) {
-      const limitedGroups = seq.map(g => g.candidates.slice(0, maxCandidatesPerGroup));
+      // Sort each group's candidates by score and distance to the route, then slice
+      const limitedGroups = seq.map(g => {
+        const sorted = [...g.candidates].sort((a, b) => {
+          const ptA = turf.point([a.lon, a.lat]);
+          const ptB = turf.point([b.lon, b.lat]);
+          const line = turf.lineString(baselineRoute.geometry.coordinates);
+          const distA = turf.pointToLineDistance(ptA, line, { units: 'kilometers' });
+          const distB = turf.pointToLineDistance(ptB, line, { units: 'kilometers' });
+          const scoreA = computePreScore(a);
+          const scoreB = computePreScore(b);
+          if (scoreA !== scoreB) return scoreB - scoreA;
+          return distA - distB;
+        });
+        return sorted.slice(0, maxCandidatesPerGroup);
+      });
       const combosForSeq = this._generateCartesianProduct(limitedGroups);
       allCombos.push(...combosForSeq);
     }
 
     const concurrencyLimit = envConfig.maxExternalRequestsPerWorkflow || 5;
     const evaluatedItineraries = [];
+    const activePromises = new Set();
 
-    // 4. Batch route the complete sequence for each permutation
-    for (let i = 0; i < allCombos.length; i += concurrencyLimit) {
-      const batch = allCombos.slice(i, i + concurrencyLimit);
-      
-      const batchPromises = batch.map(async (combo) => {
-        // Prevent duplicate physical stops (e.g. using a location that is both a gas station and a store twice)
+    // 4. Process sliding window concurrency for combos
+    const processCombo = async (combo) => {
+        // Prevent duplicate physical stops
         const uniqueOsmIds = new Set(combo.map(c => `${c.osmType}-${c.osmId}`));
         if (uniqueOsmIds.size < combo.length) {
           return { isValid: false, reason: 'Duplicate physical stops used.' };
@@ -85,42 +118,46 @@ class MultiStopItineraryService {
           destCoords
         ];
         
-        let route;
         try {
-          // OSRM automatically sums segments and returns legs between coordinates
-          route = await OSRMService.getDrivingRoute(routeCoords);
-        } catch (err) {
-          return { isValid: false, reason: `Unroutable: ${err.message}` };
-        }
+          const route = await OSRMService.getDrivingRoute(routeCoords, { includeGeometry: false });
+          const tExtra = route.durationSeconds - baselineRoute.durationSeconds;
 
-        const tExtra = route.durationSeconds - baselineRoute.durationSeconds;
-        
-        // 5. Evaluate Multi-stop Mandatory Constraints (Global Time Limit)
-        if (globalConstraints && globalConstraints.maxAdditionalDrivingTime) {
-          const maxExtra = globalConstraints.maxAdditionalDrivingTime;
-          let limitSeconds = 0;
-          if (maxExtra.unit === 'minutes') limitSeconds = maxExtra.value * 60;
-          else if (maxExtra.unit === 'hours') limitSeconds = maxExtra.value * 3600;
-          
-          if (tExtra > limitSeconds) {
-            return { isValid: false, reason: `Itinerary exceeds maximum additional driving time of ${limitSeconds}s.` };
+          if (globalConstraints && globalConstraints.maxAdditionalDrivingTime) {
+            const maxExtra = globalConstraints.maxAdditionalDrivingTime;
+            let limitSeconds = 0;
+            if (maxExtra.unit === 'minutes') limitSeconds = maxExtra.value * 60;
+            else if (maxExtra.unit === 'hours') limitSeconds = maxExtra.value * 3600;
+            
+            if (tExtra > limitSeconds) {
+              return { isValid: false, reason: `Exceeds max additional time of ${limitSeconds}s.` };
+            }
           }
+
+          return {
+            isValid: true,
+            orderedStops: combo,
+            totalDurationSeconds: route.durationSeconds,
+            totalDistanceMeters: route.distanceMeters,
+            baselineDurationSeconds: baselineRoute.durationSeconds,
+            additionalDurationSeconds: tExtra,
+            segmentLegs: route.legs
+          };
+        } catch (err) {
+          return { isValid: false, reason: err.message };
         }
+    };
 
-        return {
-          isValid: true,
-          orderedStops: combo,
-          totalDurationSeconds: route.durationSeconds,
-          totalDistanceMeters: route.distanceMeters,
-          baselineDurationSeconds: baselineRoute.durationSeconds,
-          additionalDurationSeconds: tExtra,
-          segmentLegs: route.legs // Granular per-segment data
-        };
+    for (const combo of allCombos) {
+      const p = processCombo(combo).then(res => {
+        activePromises.delete(p);
+        if (res.isValid) evaluatedItineraries.push(res);
       });
-
-      const results = await Promise.all(batchPromises);
-      evaluatedItineraries.push(...results.filter(r => r.isValid));
+      activePromises.add(p);
+      if (activePromises.size >= concurrencyLimit) {
+        await Promise.race(activePromises);
+      }
     }
+    await Promise.all(activePromises);
 
     if (evaluatedItineraries.length === 0) {
       return { status: 'error', message: 'No valid, routable itineraries could be constructed matching all constraints.' };
@@ -129,10 +166,27 @@ class MultiStopItineraryService {
     // 6. Final Itinerary Ranking (Defaulting to lowest total additional time)
     evaluatedItineraries.sort((a, b) => a.additionalDurationSeconds - b.additionalDurationSeconds);
 
+    const topResults = evaluatedItineraries.slice(0, 3);
+    
+    // 7. Fetch full geometries only for the best winning results
+    await Promise.all(topResults.map(async (itinerary) => {
+      const routeCoords = [
+        originCoords,
+        ...itinerary.orderedStops.map(c => ({ lat: c.lat, lon: c.lon })),
+        destCoords
+      ];
+      try {
+        const route = await OSRMService.getDrivingRoute(routeCoords, { includeGeometry: true });
+        itinerary.geometry = route.geometry;
+      } catch (err) {
+        console.warn('[MultiStopItineraryService] Failed to fetch full geometry:', err.message);
+      }
+    }));
+
     return {
       status: 'success',
-      bestItinerary: evaluatedItineraries[0],
-      alternatives: evaluatedItineraries.slice(1, 3)
+      bestItinerary: topResults[0],
+      alternatives: topResults.slice(1, 3)
     };
   }
 

@@ -46,12 +46,12 @@ const config = {
   ollamaApiKey: process.env.OLLAMA_API_KEY,
 
   // Business Logic Limits & Thresholds
-  requestTimeoutMs: parseInt(process.env.REQUEST_TIMEOUT_MS || '60000', 10),
+  requestTimeoutMs: parseInt(process.env.REQUEST_TIMEOUT_MS || '15000', 10),
   searchCorridors: process.env.SEARCH_CORRIDORS 
     ? process.env.SEARCH_CORRIDORS.split(',').map(n => parseInt(n.trim(), 10))
     : [2000, 5000, 10000],
   maxExternalRequestsPerWorkflow: parseInt(process.env.MAX_EXTERNAL_REQUESTS || '5', 10),
-  maxCandidatesToProcess: parseInt(process.env.MAX_CANDIDATES_TO_PROCESS || '15', 10)
+  maxCandidatesToProcess: parseInt(process.env.MAX_CANDIDATES_TO_PROCESS || '5', 10)
 };
 
 module.exports = config;

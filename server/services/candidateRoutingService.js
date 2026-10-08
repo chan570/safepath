@@ -45,7 +45,31 @@ class CandidateRoutingService {
     const routable = [];
     const unroutable = [];
 
-    // Pre-sort candidates by heuristic distance to ensure we slice the MOST RELEVANT ones.
+    // Compute a local heuristic score for pre-ranking before OSRM.
+    const computePreScore = (candidate) => {
+      let score = 0;
+      const tags = candidate.tags || {};
+      const searchAlts = candidate.searchAlternatives || [];
+      const reqAttrs = candidate.requiredAttributes || [];
+      
+      if (searchAlts.length > 0) {
+        const altMatch = searchAlts.some(alt => tags[alt.key] === alt.value);
+        if (altMatch) score += 10;
+        else if (searchAlts.some(alt => Object.values(tags).includes(alt.value))) score += 5;
+      } else {
+        score += 5;
+      }
+
+      if (reqAttrs.length > 0) {
+        reqAttrs.forEach(attr => {
+          if (tags[attr.key] === attr.value) score += 3;
+          else if (Object.values(tags).includes(attr.value)) score += 1;
+        });
+      }
+      return score;
+    };
+
+    // Pre-sort candidates by heuristic distance and local semantic match to ensure we slice the MOST RELEVANT ones.
     const pref = reqPlace.proximityPreference || 'route';
     const sortedCandidates = [...candidates].sort((a, b) => {
       const ptA = turf.point([a.lon, a.lat]);
@@ -61,12 +85,19 @@ class CandidateRoutingService {
         distA = turf.distance(ptA, targetPt, { units: 'kilometers' });
         distB = turf.distance(ptB, targetPt, { units: 'kilometers' });
       } else {
-        // default to 'route' (on the way)
         const line = turf.lineString(baselineRoute.geometry.coordinates);
         distA = turf.pointToLineDistance(ptA, line, { units: 'kilometers' });
         distB = turf.pointToLineDistance(ptB, line, { units: 'kilometers' });
       }
       
+      const scoreA = computePreScore(a);
+      const scoreB = computePreScore(b);
+      
+      // Higher score is better. If scores differ, sort by score descending.
+      if (scoreA !== scoreB) {
+        return scoreB - scoreA; 
+      }
+      // Otherwise, sort by distance ascending (lower distance is better)
       return distA - distB;
     });
 
