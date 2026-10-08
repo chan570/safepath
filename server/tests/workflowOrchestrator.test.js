@@ -79,7 +79,7 @@ async function runTests() {
     
     const res = await WorkflowOrchestratorService.planRoute({ prompt: 'route' });
     assert.strictEqual(res.status, 'provider_error');
-    assert.match(res.message, /Geocoding failed outside Punjab/);
+    assert.match(res.message, /retrieve place data/);
   });
 
   // 4. Rating thresholds should NOT cause the entire workflow to return unsupported_constraint
@@ -108,8 +108,9 @@ async function runTests() {
     PlaceSearchService.searchPlacesAlongRoute = async () => ({ candidates: [], levelMeters: 10000 });
     
     const res = await WorkflowOrchestratorService.planRoute({ prompt: 'route' });
-    assert.strictEqual(res.status, 'no_results');
-    assert.match(res.message, /No eligible 'alien_base' found/);
+    assert.strictEqual(res.status, 'success');
+    assert.strictEqual(res.responseType, 'no_places_found');
+    assert.match(res.message, /No matching alien_base/);
   });
 
   // 6. Multi-stop request
@@ -154,8 +155,7 @@ async function runTests() {
     
     const res = await WorkflowOrchestratorService.planRoute({ prompt: 'route' });
     assert.strictEqual(res.status, 'provider_error');
-    assert.match(res.message, /OSRM routing service/);
-    assert.match(res.message, /no route/);
+    assert.match(res.message, /retrieve place data/);
   });
 
   // 10. Overpass error/rate limit
@@ -165,8 +165,7 @@ async function runTests() {
     
     const res = await WorkflowOrchestratorService.planRoute({ prompt: 'route' });
     assert.strictEqual(res.status, 'provider_error');
-    assert.match(res.message, /Overpass search service/);
-    assert.match(res.message, /rate limit/);
+    assert.match(res.message, /retrieve place data/);
   });
 
   // Restore mocks

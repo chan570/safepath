@@ -37,6 +37,7 @@ function App() {
   const [baselineRoute, setBaselineRoute] = useState(null);
   const [routeMetadata, setRouteMetadata] = useState(null);
   const [responseType, setResponseType] = useState(null);
+  const [responseMessage, setResponseMessage] = useState(null);
 
   const handleSearch = async (searchData) => {
     if (appState === 'loading') return;
@@ -49,6 +50,7 @@ function App() {
     setBaselineRoute(null);
     setRouteMetadata(null);
     setResponseType(null);
+    setResponseMessage(null);
 
     try {
       const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
@@ -89,7 +91,8 @@ function App() {
       toast.success('Here are your results!');
       setBaselineRoute(data.baselineRoute || null);
       setRouteMetadata(data.metadata || null);
-      setResponseType(data.type || 'single-stop');
+      setResponseType(data.responseType || data.type || 'single-stop');
+      setResponseMessage(data.message || null);
 
       if (data.type === 'multi-stop') {
         setRoutes([data.itinerary]);
@@ -148,6 +151,7 @@ function App() {
           routes={routes}
           baselineRoute={baselineRoute}
           responseType={responseType}
+          responseMessage={responseMessage}
           metadata={routeMetadata}
           selectedRouteIndex={selectedRouteIndex}
           onSelectRoute={handleSelectRoute}

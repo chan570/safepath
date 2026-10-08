@@ -78,7 +78,7 @@ const ItineraryDetails = ({ item, responseType, baselineRoute }) => {
   );
 };
 
-const RouteResults = ({ appState, routes = [], baselineRoute, responseType, metadata, selectedRouteIndex, onSelectRoute, onClearSelection }) => {
+const RouteResults = ({ appState, routes = [], baselineRoute, responseType, responseMessage, metadata, selectedRouteIndex, onSelectRoute, onClearSelection }) => {
   if (appState === 'idle') {
     return (
       <div className="results-panel empty-state">
@@ -105,7 +105,7 @@ const RouteResults = ({ appState, routes = [], baselineRoute, responseType, meta
     );
   }
 
-  if (appState === 'no-results' || (appState === 'results' && routes.length === 0 && responseType !== 'baseline_only')) {
+  if (appState === 'no-results' || (appState === 'results' && routes.length === 0 && !['baseline_only', 'no_places_found', 'provider_error'].includes(responseType))) {
     return (
       <div className="results-panel empty-state">
         <p>No eligible routes found matching your criteria. Try adjusting your search.</p>
@@ -124,9 +124,29 @@ const RouteResults = ({ appState, routes = [], baselineRoute, responseType, meta
         )}
       </div>
       
+      {responseMessage && !['no_places_found', 'provider_error'].includes(responseType) && (
+        <div style={{ padding: '10px 20px', backgroundColor: '#f8f9fa', borderBottom: '1px solid #eaeaea', color: '#444', fontSize: '0.95rem' }}>
+          {responseMessage}
+        </div>
+      )}
 
 
 
+
+      {(responseType === 'no_places_found' || responseType === 'provider_error') && (
+        <div className="route-item selected">
+          <div className="route-info">
+            <strong>{responseType === 'provider_error' ? 'Service Unavailable' : 'No Places Found'}</strong>
+            <p style={{ marginTop: '8px', marginBottom: '12px' }}>{responseMessage || 'No matching places could be retrieved.'}</p>
+            {baselineRoute && (
+              <div className="summary-box">
+                <div><strong>Base Driving Time:</strong> {formatDuration(baselineRoute.durationSeconds)}</div>
+                <div><strong>Base Distance:</strong> {formatDistance(baselineRoute.distanceMeters)}</div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {responseType === 'baseline_only' && (
         <div className="route-item selected">

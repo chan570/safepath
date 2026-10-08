@@ -51,7 +51,8 @@ Example for "chai and snacks":
 RULES:
 1. ONLY use real OSM tags.
 2. Put subjective requirements in "unsupportedRequirements".
-3. ONLY output valid JSON.`;
+3. Normalize spelling/wording to official OSM standard tags (e.g., "jewellery" -> shop=jewelry, "salon" -> shop=beauty, "coffee" -> amenity=cafe).
+4. ONLY output valid JSON.`;
 
 class OsmTranslationService {
   static async translateToOsmTags(reqPlace) {

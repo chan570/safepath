@@ -9,6 +9,7 @@ const MultiStopItineraryService = require('./multiStopItineraryService');
 class WorkflowOrchestratorService {
   static async planRoute(userRequest) {
     const tStart = performance.now();
+    let calculatedBaselineRoute = null;
     const metrics = {
       overpassRequests: 0,
       osmCandidatesFound: 0,
@@ -51,9 +52,10 @@ class WorkflowOrchestratorService {
       const tBaselineMs = performance.now() - tBaselineStart;
       
       if (baselineResult.status === 'clarification_required') return baselineResult; 
-      if (baselineResult.status === 'error') return { status: 'provider_error', message: baselineResult.errors.join('; ') };
+      if (baselineResult.status === 'error') return { status: 'provider_error', message: "We couldn't retrieve place data right now. Please try again." };
 
       const baselineRoute = baselineResult.route;
+      calculatedBaselineRoute = baselineRoute;
       const routeGeometry = baselineRoute.geometry;
       const globalConstraints = { maxAdditionalDrivingTime: intent.maxAdditionalDrivingTime };
 
@@ -84,7 +86,14 @@ class WorkflowOrchestratorService {
         const tItineraryMs = performance.now() - tItineraryStart;
         
         if (itineraryResult.status === 'clarification_required') return { status: 'clarification_required', ambiguities: itineraryResult.ambiguities };
-        if (itineraryResult.status === 'error') return { status: 'no_results', message: itineraryResult.message };
+        if (itineraryResult.status === 'error') return { 
+          status: 'success', 
+          responseType: 'no_places_found',
+          type: 'multi-stop',
+          message: 'No matching places were found along this route in the available map data.',
+          baselineRoute,
+          results: []
+        };
 
         const totalMs = Math.round(performance.now() - tStart);
         const tGeocodingMs = Math.round(baselineResult.tGeocodingMs || 0);
@@ -109,6 +118,7 @@ class WorkflowOrchestratorService {
         return {
            status: 'success',
            type: 'multi-stop',
+           message: 'Here are the best itineraries matching your request.',
            baselineRoute,
            itinerary: itineraryResult.bestItinerary,
            alternatives: itineraryResult.alternatives
@@ -125,7 +135,14 @@ class WorkflowOrchestratorService {
       const tSearchMs = performance.now() - tSearchStart;
       
       if (searchResult.candidates.length === 0) {
-          return { status: 'no_results', message: `No eligible '${displayName}' found.` };
+          return {
+            status: 'success',
+            responseType: 'no_places_found',
+            type: 'single-stop',
+            message: `No matching ${displayName} were found along this route in the available map data.`,
+            baselineRoute,
+            results: []
+          };
       }
 
       const tRouteStart = performance.now();
@@ -149,9 +166,13 @@ class WorkflowOrchestratorService {
 
       if (rankingResult.results.length === 0) {
           return { 
-            status: 'no_results', 
-            message: 'Candidates were found, but none met all mandatory constraints or were routable.',
-            metadata: rankingResult.metadata 
+            status: 'success', 
+            responseType: 'no_places_found',
+            type: 'single-stop',
+            message: 'No place matched all your preferences, so we are showing the closest available options.',
+            baselineRoute,
+            metadata: rankingResult.metadata,
+            results: []
           };
       }
 
@@ -200,6 +221,7 @@ class WorkflowOrchestratorService {
       return {
         status: 'success',
         type: 'single-stop',
+        message: `Here are the best ${displayName}s along your route.`,
         baselineRoute,
         metadata: rankingResult.metadata,
         results: rankingResult.results
@@ -209,23 +231,27 @@ class WorkflowOrchestratorService {
        console.error('[WorkflowOrchestrator Error]', error);
        const msg = error.message || '';
        
+       const fallbackMsg = "We couldn't retrieve place data right now. Please try again.";
+
+       if (calculatedBaselineRoute) {
+         return {
+           status: 'success',
+           responseType: 'provider_error',
+           type: 'error_fallback',
+           message: fallbackMsg,
+           baselineRoute: calculatedBaselineRoute,
+           results: []
+         };
+       }
+
        if (msg.includes('Ollama network failure') || msg.includes('Ollama daemon unreachable') || msg.includes("not found. Run 'ollama pull")) {
          return { status: 'provider_error', message: 'Ollama is unavailable or the configured local model is missing. Please start the local model. We do not fall back to cloud models.' };
        }
        if (msg.includes('JSON') || msg.includes('Malformed') || msg.includes('Ollama')) {
          return { status: 'internal_error', message: 'The local model returned invalid JSON or an unexpected schema.' };
        }
-       if (msg.includes('Overpass') || msg.includes('rate limit')) {
-         return { status: 'provider_error', message: 'The OpenStreetMap Overpass search service returned an error, hit a rate limit, or timed out.' };
-       }
-       if (msg.includes('OSRM') || msg.includes('NoRoute') || msg.includes('unroutable')) {
-         return { status: 'provider_error', message: 'The OSRM routing service returned an error, no route, invalid geometry, or timed out.' };
-       }
-       if (msg.includes('Nominatim') || msg.includes('Geocoding')) {
-         return { status: 'provider_error', message: 'The geocoding service returned an error or timed out.' };
-       }
-
-       return { status: 'internal_error', message: 'An unexpected internal exception occurred. Please try again.' };
+       
+       return { status: 'provider_error', message: fallbackMsg };
     }
   }
 }
