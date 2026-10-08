@@ -113,82 +113,139 @@ class CandidateRoutingService {
       metrics.candidatesSentToOsrm = (metrics.candidatesSentToOsrm || 0) + candidatesToProcess.length;
     }
 
-    const processCandidate = async (candidate) => {
+    const routableCandidates = [];
+    const unroutableCandidates = [];
+
+    if (candidatesToProcess.length === 0) {
+      return { routableCandidates, unroutableCandidates, limitExceeded };
+    }
+
+    const candidateCoords = candidatesToProcess.map(c => ({ lat: c.lat, lon: c.lon }));
+    let tableSuccess = false;
+    let tableDurations = [];
+    let tableDistances = [];
+
+    try {
+      const tTableStart = Date.now();
+      const sources = [originCoords, ...candidateCoords];
+      const destinations = [...candidateCoords, destCoords];
+      
+      const tableData = await OSRMService.getTable(sources, destinations, { metrics });
+      tableDurations = tableData.durations;
+      tableDistances = tableData.distances;
+      tableSuccess = true;
+      if (metrics) metrics.tOsrmTableMs = (metrics.tOsrmTableMs || 0) + (Date.now() - tTableStart);
+    } catch (err) {
+      console.warn(`[CandidateRoutingService] Table API failed, falling back to individual route requests: ${err.message}`);
+    }
+
+    if (tableSuccess) {
+      candidatesToProcess.forEach((candidate, idx) => {
         if (typeof candidate.lat !== 'number' || typeof candidate.lon !== 'number') {
-          return { ...candidate, isRoutable: false, routingStatus: 'Invalid coordinates' };
+          unroutableCandidates.push({ ...candidate, isRoutable: false, routingStatus: 'Invalid coordinates' });
+          return;
         }
 
-        const placeCoords = { lat: candidate.lat, lon: candidate.lon };
-        
-        const [route1, route2] = await Promise.all([
-          getRoute(originCoords, placeCoords),
-          getRoute(placeCoords, destCoords)
-        ]);
+        const sourceOriginIdx = 0;
+        const destCandIdx = idx;
+        const sourceCandIdx = idx + 1;
+        const destDestIdx = candidateCoords.length;
 
-        if (route1.error || route2.error) {
-          return {
-            ...candidate,
-            isRoutable: false,
-            routingStatus: `Unroutable: ${route1.error || route2.error}`
-          };
+        const dur1 = tableDurations[sourceOriginIdx]?.[destCandIdx];
+        const dist1 = tableDistances[sourceOriginIdx]?.[destCandIdx];
+        const dur2 = tableDurations[sourceCandIdx]?.[destDestIdx];
+        const dist2 = tableDistances[sourceCandIdx]?.[destDestIdx];
+
+        if (dur1 == null || dist1 == null || dur2 == null || dist2 == null) {
+          unroutableCandidates.push({ ...candidate, isRoutable: false, routingStatus: 'Unroutable: No valid table duration' });
+          return;
         }
 
-        const tVia = route1.durationSeconds + route2.durationSeconds;
-        const dVia = route1.distanceMeters + route2.distanceMeters;
+        const tVia = dur1 + dur2;
+        const dVia = dist1 + dist2;
         const tExtra = tVia - baselineRoute.durationSeconds;
 
-        const result = {
+        routableCandidates.push({
           ...candidate,
           isRoutable: true,
-          routingStatus: 'Success',
-          originToPlaceDurationSeconds: route1.durationSeconds,
-          placeToDestinationDurationSeconds: route2.durationSeconds,
+          routingStatus: tExtra < 0 ? 'Success (Routing Inconsistency)' : 'Success',
+          originToPlaceDurationSeconds: dur1,
+          placeToDestinationDurationSeconds: dur2,
           viaPlaceDurationSeconds: tVia,
           baselineDurationSeconds: baselineRoute.durationSeconds,
           additionalDurationSeconds: tExtra,
-          
-          originToPlaceDistanceMeters: route1.distanceMeters,
-          placeToDestinationDistanceMeters: route2.distanceMeters,
+          originToPlaceDistanceMeters: dist1,
+          placeToDestinationDistanceMeters: dist2,
           viaPlaceDistanceMeters: dVia,
-          baselineDistanceMeters: baselineRoute.distanceMeters,
-
-          route1Geometry: route1.geometry,
-          route2Geometry: route2.geometry
-        };
-
-        if (tExtra < 0) {
-          result.routingStatus = 'Success (Routing Inconsistency: via-place route is faster than baseline)';
-        }
-
-        return result;
-    };
-
-    const activePromises = new Set();
-    const batchResults = [];
-    
-    // Controlled concurrency instead of strictly sequential batches
-    for (const candidate of candidatesToProcess) {
-      const p = processCandidate(candidate).then(res => {
-        activePromises.delete(p);
-        batchResults.push(res);
+          baselineDistanceMeters: baselineRoute.distanceMeters
+        });
       });
-      activePromises.add(p);
-      if (activePromises.size >= concurrencyLimit) {
-        await Promise.race(activePromises);
+    } else {
+      // Fallback: Individual requests (Origin -> Candidate -> Dest)
+      const tRouteStart = Date.now();
+      const processCandidate = async (candidate) => {
+          if (typeof candidate.lat !== 'number' || typeof candidate.lon !== 'number') {
+            return { ...candidate, isRoutable: false, routingStatus: 'Invalid coordinates' };
+          }
+          const placeCoords = { lat: candidate.lat, lon: candidate.lon };
+          
+          try {
+            const route = await OSRMService.getDrivingRoute([originCoords, placeCoords, destCoords], { includeGeometry: false, metrics });
+            if (!route.legs || route.legs.length < 2) {
+              return { ...candidate, isRoutable: false, routingStatus: 'Unroutable: Legs missing' };
+            }
+            const leg1 = route.legs[0];
+            const leg2 = route.legs.slice(1).reduce((acc, l) => ({ 
+              durationSeconds: acc.durationSeconds + l.durationSeconds, 
+              distanceMeters: acc.distanceMeters + l.distanceMeters 
+            }), { durationSeconds: 0, distanceMeters: 0 });
+
+            const tVia = route.durationSeconds;
+            const dVia = route.distanceMeters;
+            const tExtra = tVia - baselineRoute.durationSeconds;
+
+            return {
+              ...candidate,
+              isRoutable: true,
+              routingStatus: tExtra < 0 ? 'Success (Routing Inconsistency)' : 'Success',
+              originToPlaceDurationSeconds: leg1.durationSeconds,
+              placeToDestinationDurationSeconds: leg2.durationSeconds,
+              viaPlaceDurationSeconds: tVia,
+              baselineDurationSeconds: baselineRoute.durationSeconds,
+              additionalDurationSeconds: tExtra,
+              originToPlaceDistanceMeters: leg1.distanceMeters,
+              placeToDestinationDistanceMeters: leg2.distanceMeters,
+              viaPlaceDistanceMeters: dVia,
+              baselineDistanceMeters: baselineRoute.distanceMeters
+            };
+          } catch (err) {
+            return { ...candidate, isRoutable: false, routingStatus: `Unroutable: ${err.message}` };
+          }
+      };
+
+      const activePromises = new Set();
+      const batchResults = [];
+      const concurrencyLimit = envConfig.maxExternalRequestsPerWorkflow || 5;
+
+      for (const candidate of candidatesToProcess) {
+        const p = processCandidate(candidate).then(res => {
+          activePromises.delete(p);
+          batchResults.push(res);
+        });
+        activePromises.add(p);
+        if (activePromises.size >= concurrencyLimit) await Promise.race(activePromises);
+      }
+      await Promise.all(activePromises);
+      
+      if (metrics) metrics.tOsrmRouteMs = (metrics.tOsrmRouteMs || 0) + (Date.now() - tRouteStart);
+
+      for (const res of batchResults) {
+        if (res.isRoutable) routableCandidates.push(res);
+        else unroutableCandidates.push(res);
       }
     }
-    await Promise.all(activePromises);
-    
-    batchResults.forEach(res => {
-      if (res.isRoutable) routable.push(res);
-      else unroutable.push(res);
-    });
 
-    return {
-      routableCandidates: routable,
-      unroutableCandidates: unroutable,
-      limitExceeded
-    };
+    return { routableCandidates, unroutableCandidates, limitExceeded };
   }
 }
 

@@ -162,12 +162,8 @@ class WorkflowOrchestratorService {
       await Promise.all(rankingResult.results.map(async (candidate) => {
         const candidateCoords = { lat: candidate.lat, lon: candidate.lon };
         try {
-          const [r1, r2] = await Promise.all([
-            OSRMService.getDrivingRoute([originCoords, candidateCoords], { includeGeometry: true, metrics }),
-            OSRMService.getDrivingRoute([candidateCoords, destCoords], { includeGeometry: true, metrics })
-          ]);
-          candidate.route1Geometry = r1.geometry;
-          candidate.route2Geometry = r2.geometry;
+          const route = await OSRMService.getDrivingRoute([originCoords, candidateCoords, destCoords], { includeGeometry: true, metrics });
+          candidate.geometry = route.geometry;
         } catch (err) {
           console.warn(`[WorkflowOrchestrator] Failed to fetch full geometry for candidate ${candidate.name}:`, err.message);
         }
@@ -180,20 +176,22 @@ class WorkflowOrchestratorService {
 
       console.log(`
 [Perf Metrics] Total Response Time: ${totalMs}ms
-- Prompt: ${Math.round(tPromptMs)}ms
-- Geocoding: ${tGeocodingMs}ms
-- Baseline route: ${tBaseMs}ms
-- OSM search: ${Math.round(tSearchMs)}ms
-- Candidate pruning: (Included natively via fast Turf calculations before routing)
-- OSRM routing: ${Math.round(tRouteMs)}ms
-- Ranking: ${Math.round(tRankMs)}ms
-- Final geometry: ${Math.round(tGeoMs)}ms
+- Prompt time: ${Math.round(tPromptMs)}ms
+- Geocoding time: ${tGeocodingMs}ms
+- Baseline OSRM time: ${tBaseMs}ms
+- OSM search time: ${Math.round(tSearchMs)}ms
+- Candidate pruning time: (Included natively via fast Turf calculations before routing)
+- OSRM Table time: ${Math.round(metrics.tOsrmTableMs || 0)}ms
+- OSRM Route time: ${Math.round(metrics.tOsrmRouteMs || 0)}ms
+- Ranking time: ${Math.round(tRankMs)}ms
+- Final geometry time: ${Math.round(tGeoMs)}ms
 
 [External API Calls]
 - Overpass requests: ${metrics.overpassRequests}
 - OSM candidates found: ${metrics.osmCandidatesFound}
 - Candidates sent to OSRM: ${metrics.candidatesSentToOsrm}
-- OSRM requests: ${metrics.osrmRequests}
+- OSRM Table requests: ${metrics.osrmTableRequests || 0}
+- OSRM Route requests: ${metrics.osrmRequests}
 - Multi-stop combinations evaluated: ${metrics.multiStopCombinationsEvaluated}
 `);
 

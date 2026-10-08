@@ -34,15 +34,15 @@ class CorridorUtils {
 
     const searchAreas = [];
 
-    // For most regional routes (< 100km), one padded bounding box is sufficient and prevents unnecessary Overpass queries.
+    // For most regional routes, one padded bounding box is sufficient and prevents unnecessary Overpass queries.
     // For longer routes, we chunk the route to avoid generating a massive diagonal bounding box that captures
     // irrelevant remote areas, reducing payload size and respecting Overpass usage policies.
-    if (totalLengthKm <= 15) {
+    if (totalLengthKm <= 50) {
       const buffered = turf.buffer(line, bufferKm, { units: 'kilometers' });
       const [west, south, east, north] = turf.bbox(buffered);
       searchAreas.push({ south, west, north, east });
     } else {
-      const segments = turf.lineChunk(line, 15, { units: 'kilometers' });
+      const segments = turf.lineChunk(line, 50, { units: 'kilometers' });
       segments.features.forEach(segment => {
         const buffered = turf.buffer(segment, bufferKm, { units: 'kilometers' });
         const [west, south, east, north] = turf.bbox(buffered);
