@@ -78,11 +78,11 @@ async function runTests() {
 
   // 5. Unsupported ranking attributes
   test('Flags unsupported subjective ranking preferences and falls back safely', () => {
-    const reqPlace = { category: 'hospital', softPreferences: ['find the highest rated'] };
+    const reqPlace = { category: 'hospital', softPreferences: [{ type: 'highest_rating', weight: 1 }] };
     const res = CandidateRankingService.rankCandidates(baseCandidates, reqPlace, {}, searchContext);
     
     assert.strictEqual(res.metadata.unsupportedAttributes.length, 1);
-    assert.match(res.metadata.unsupportedAttributes[0], /ratings is unsupported/);
+    assert.match(res.metadata.unsupportedAttributes[0], /Preference 'highest_rating' is unsupported/);
     assert.strictEqual(res.results[0].osmId, 2); // Falls back to default time-sorting safely
   });
 
@@ -91,7 +91,7 @@ async function runTests() {
     const reqPlace = { category: 'hospital' };
     const res = CandidateRankingService.rankCandidates(baseCandidates, reqPlace, {}, searchContext);
     
-    assert.ok(res.metadata.disclaimer.includes('under the available data and routing results'), 'Must include honest disclaimer');
+    assert.ok(res.metadata.disclaimer.includes('OSM is the source of truth.'), 'Must include honest disclaimer');
     assert.ok(res.metadata.disclaimer.includes('not strictly real-time traffic aware'), 'Must disclaim routing limits');
     assert.strictEqual(res.metadata.searchCorridorUsedMeters, 5000);
     assert.strictEqual(res.metadata.rawCandidatesDiscovered, 10);

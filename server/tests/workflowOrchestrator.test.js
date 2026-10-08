@@ -40,16 +40,21 @@ async function runTests() {
   const resetMocks = () => {
     PromptService.parseIntent = async () => ({ status: 'success', data: { origin: 'A', destination: 'B', requestedPlaces: [] } });
     BaselineRouteService.getBaselineRoute = async () => ({ status: 'success', route: { geometry: {} } });
-    PlaceSearchService.searchPlacesAlongRoute = async () => ({ candidates: [{}], levelMeters: 2000 });
+    PlaceSearchService.searchPlacesAlongRoute = async (geom, requested) => {
+      if (Array.isArray(requested) && requested.length > 1) {
+        return requested.map(req => ({ userRequirement: req.userRequirement, candidates: [{}], levelMeters: 2000 }));
+      }
+      return { candidates: [{}], levelMeters: 2000 };
+    };
     CandidateRoutingService.calculateCandidateRoutes = async () => ({ routableCandidates: [{}], unroutableCandidates: [] });
-    CandidateRankingService.rankCandidates = async () => ({ results: [{}], metadata: {} });
-    MultiStopItineraryService.buildItinerary = async () => ({ status: 'success', bestItinerary: {}, alternatives: [] });
+    CandidateRankingService.rankCandidates = async () => ({ results: [{lat: 0, lon: 0}], metadata: {} });
+    MultiStopItineraryService.buildItinerary = async () => ({ status: 'success', bestItinerary: { orderedStops: [] }, alternatives: [] });
   };
 
   // 1. Successful single-stop request
   await test('Successfully coordinates a complete single-stop route', async () => {
     resetMocks();
-    PromptService.parseIntent = async () => ({ status: 'success', data: { origin: 'A', destination: 'B', requestedPlaces: [{ category: 'cafe' }] } });
+    PromptService.parseIntent = async () => ({ status: 'success', data: { origin: 'A', destination: 'B', requestedPlaces: [{ userRequirement: 'cafe' }] } });
     
     const res = await WorkflowOrchestratorService.planRoute({ prompt: 'route' });
     assert.strictEqual(res.status, 'success');
@@ -77,22 +82,29 @@ async function runTests() {
     assert.match(res.message, /Geocoding failed outside Punjab/);
   });
 
-  // 4. Unsupported mandatory rating constraint
-  await test('Intercepts unsupported rating thresholds early', async () => {
+  // 4. Rating thresholds should NOT cause the entire workflow to return unsupported_constraint
+  await test('Does not reject the whole request because of ratingThreshold', async () => {
     resetMocks();
     PromptService.parseIntent = async () => ({ status: 'success', data: { 
       origin: 'A', destination: 'B', 
-      requestedPlaces: [{ category: 'cafe', ratingThreshold: { value: 4 } }] 
+      requestedPlaces: [{ userRequirement: 'cafe', ratingThreshold: { value: 4, operator: '>=' } }] 
     } });
     
+    // If it doesn't fail early, it should reach the PlaceSearchService
+    let reachedSearch = false;
+    PlaceSearchService.searchPlacesAlongRoute = async () => {
+        reachedSearch = true;
+        return { candidates: [], levelMeters: 2000 };
+    };
+
     const res = await WorkflowOrchestratorService.planRoute({ prompt: 'route' });
-    assert.strictEqual(res.status, 'unsupported_constraint');
+    assert.strictEqual(reachedSearch, true, 'Should have reached PlaceSearchService despite rating threshold');
   });
 
   // 5. No eligible candidates
   await test('Returns no_results if Overpass expansion loop finds nothing', async () => {
     resetMocks();
-    PromptService.parseIntent = async () => ({ status: 'success', data: { origin: 'A', destination: 'B', requestedPlaces: [{ category: 'alien_base' }] } });
+    PromptService.parseIntent = async () => ({ status: 'success', data: { origin: 'A', destination: 'B', requestedPlaces: [{ userRequirement: 'alien_base' }] } });
     PlaceSearchService.searchPlacesAlongRoute = async () => ({ candidates: [], levelMeters: 10000 });
     
     const res = await WorkflowOrchestratorService.planRoute({ prompt: 'route' });
@@ -105,7 +117,7 @@ async function runTests() {
     resetMocks();
     PromptService.parseIntent = async () => ({ status: 'success', data: { 
       origin: 'A', destination: 'B', 
-      requestedPlaces: [{ category: 'gas' }, { category: 'shop' }] 
+      requestedPlaces: [{ userRequirement: 'gas' }, { userRequirement: 'shop' }] 
     } });
     
     const res = await WorkflowOrchestratorService.planRoute({ prompt: 'route' });

@@ -2,6 +2,13 @@ const assert = require('assert');
 const PlaceSearchService = require('../services/placeSearchService');
 const OverpassService = require('../services/overpassService');
 const CorridorUtils = require('../utils/corridorUtils');
+const OsmTranslationService = require('../services/osmTranslationService');
+
+OsmTranslationService.translateToOsmTags = async (reqPlace) => ({
+  searchAlternatives: [{ key: 'mock', value: 'tag' }],
+  requiredAttributes: [],
+  unsupportedRequirements: []
+});
 
 const mockRouteGeometry = {
   type: 'LineString',
@@ -51,7 +58,7 @@ async function runTests() {
   // 2. Two candidates at 2km, followed by at least three at 5km
   await test('Expands to 5km if only 2 candidates found at 2km', async () => {
     let bboxWidths = [];
-    OverpassService.fetchPlaces = async (cat, bbox) => {
+    OverpassService.fetchPlaces = async (searchAlts, reqAttrs, bbox) => {
       // bbox width is a proxy for the expansion loop. 
       // 5km bbox will be larger than 2km bbox.
       bboxWidths.push(bbox.east - bbox.west); 
@@ -117,24 +124,6 @@ async function runTests() {
     // Since only 2 unique elements exist, it will exhaust 2km, 5km, and 10km
     assert.strictEqual(result.levelMeters, 10000);
     assert.strictEqual(result.candidates.length, 2, 'Should deduplicate duplicates across levels');
-  });
-
-  // 6. Raw candidates that fail hard constraints
-  await test('Does not stop early if raw elements fail strict constraints', async () => {
-    OverpassService.fetchPlaces = async () => [
-      { osmType: 'node', osmId: 1, lat: 0.0, lon: 0.0 },
-      { osmType: 'node', osmId: 2, lat: 0.0, lon: 0.0 },
-      { osmType: 'node', osmId: 3, lat: 0.0, lon: 0.0 },
-      { osmType: 'node', osmId: 4, lat: 0.0, lon: 0.0 }
-    ];
-    // Request a place with a rating threshold (which we cannot fulfill currently)
-    const strictReq = [{ category: 'hospital', ratingThreshold: { value: 4, operator: ">" } }];
-    
-    const result = await PlaceSearchService.searchPlacesAlongRoute(mockRouteGeometry, strictReq);
-    
-    // It finds 4 raw elements at 2km, but 0 are eligible. It should expand to 5km and 10km trying to find eligible ones.
-    assert.strictEqual(result.levelMeters, 10000);
-    assert.strictEqual(result.candidates.length, 0, 'Should reject all elements failing eligibility');
   });
 
   // 7. A provider failure during expansion

@@ -25,7 +25,11 @@ async function runTests() {
   // Test Data
   const origin = { lat: 10, lon: 10 };
   const dest = { lat: 20, lon: 20 };
-  const baseline = { durationSeconds: 1000, distanceMeters: 50000 };
+  const baseline = {
+    durationSeconds: 1000,
+    distanceMeters: 50000,
+    geometry: { type: 'LineString', coordinates: [[10, 10], [15, 15], [20, 20]] }
+  };
   
   console.log('--- CANDIDATE ROUTING SERVICE TESTS ---');
 

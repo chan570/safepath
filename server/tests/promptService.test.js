@@ -34,8 +34,11 @@ async function runTests() {
       destination: "Jalandhar",
       numberOfStopsRequested: 1,
       requestedPlaces: [{
-        category: "fuel station", // Will be normalized to 'petrol_pump'
-        hardConstraints: [], softPreferences: [], ratingThreshold: null
+        userRequirement: "fuel station",
+        semanticIntent: "Place to buy fuel",
+        requirements: ["fuel"],
+        confidence: 0.99,
+        hardConstraints: [], softPreferences: [], ratingThreshold: null, proximityPreference: "on_the_way"
       }],
       maxAdditionalDrivingTime: null,
       stopOrderRequirements: [],
@@ -46,7 +49,7 @@ async function runTests() {
     const result = await PromptService.parseIntent('Ludhiana to Jalandhar, need a fuel station.');
     assert.strictEqual(result.status, 'success');
     assert.strictEqual(result.data.origin, 'Ludhiana');
-    assert.strictEqual(result.data.requestedPlaces[0].category, 'petrol_pump', 'Should normalize category alias');
+    assert.strictEqual(result.data.requestedPlaces[0].userRequirement, 'fuel station');
   });
 
   // 2. Ambiguous Prompt (Missing Destination)
@@ -55,7 +58,10 @@ async function runTests() {
       origin: "Delhi",
       destination: null, // Missing
       numberOfStopsRequested: 1,
-      requestedPlaces: [{ category: "restaurant", hardConstraints: [], softPreferences: [], ratingThreshold: null }],
+      requestedPlaces: [{ 
+        userRequirement: "restaurant", semanticIntent: "Food place", requirements: ["food"], confidence: 0.9, 
+        hardConstraints: [], softPreferences: [], ratingThreshold: null, proximityPreference: "on_the_way" 
+      }],
       maxAdditionalDrivingTime: null, stopOrderRequirements: [], ambiguities: [], unsupportedRequirements: []
     });
 
@@ -64,21 +70,7 @@ async function runTests() {
     assert.ok(result.ambiguities.some(a => a.includes('Destination location is missing')));
   });
 
-  // 3. Unsupported Category
-  await test('Safely rejects unsupported categories without unrestricted queries', async () => {
-    mockOllamaJSON({
-      origin: "A", destination: "B", numberOfStopsRequested: 1,
-      requestedPlaces: [{
-        category: "spaceship port", // Unrecognized
-        hardConstraints: [], softPreferences: [], ratingThreshold: null
-      }],
-      maxAdditionalDrivingTime: null, stopOrderRequirements: [], ambiguities: [], unsupportedRequirements: []
-    });
 
-    const result = await PromptService.parseIntent('A to B, find a spaceship port.');
-    assert.strictEqual(result.status, 'clarification_required');
-    assert.ok(result.unsupportedRequirements.some(req => req.includes("Category 'spaceship port' is currently unsupported")));
-  });
 
   // 4. Markdown Wrapped JSON
   await test('Strips Markdown fences from JSON output', async () => {

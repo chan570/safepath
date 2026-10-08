@@ -40,13 +40,15 @@ async function runTests() {
     assert.strictEqual(res.bestItinerary.additionalDurationSeconds, 100);
   });
 
-  // 2. Ambiguous stop order
+  // 2. Ambiguous stop order with too many stops
   await test('Demands clarification if multiple stops are requested without explicit sequence', async () => {
     const groups = [
       { category: 'cafe', candidates: [{ osmId: 1, lat: 11, lon: 11 }] },
-      { category: 'park', candidates: [{ osmId: 2, lat: 12, lon: 12 }] }
+      { category: 'park', candidates: [{ osmId: 2, lat: 12, lon: 12 }] },
+      { category: 'bank', candidates: [{ osmId: 3, lat: 13, lon: 13 }] },
+      { category: 'shop', candidates: [{ osmId: 4, lat: 14, lon: 14 }] }
     ];
-    // Empty stopOrderRequirements triggers ambiguity
+    // Empty stopOrderRequirements triggers ambiguity since >3 stops
     const res = await MultiStopItineraryService.buildItinerary(origin, dest, baseline, groups, [], {});
     
     assert.strictEqual(res.status, 'clarification_required');

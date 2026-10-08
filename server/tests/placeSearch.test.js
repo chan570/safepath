@@ -1,6 +1,13 @@
 const assert = require('assert');
 const PlaceSearchService = require('../services/placeSearchService');
 const OverpassService = require('../services/overpassService');
+const OsmTranslationService = require('../services/osmTranslationService');
+
+OsmTranslationService.translateToOsmTags = async (reqPlace) => ({
+  searchAlternatives: [{ key: 'mock', value: 'tag' }],
+  requiredAttributes: [],
+  unsupportedRequirements: []
+});
 
 const mockRouteGeometry = {
   type: 'LineString',
@@ -71,10 +78,12 @@ async function runTests() {
       ];
     };
     
-    const { candidates } = await PlaceSearchService.searchPlacesAlongRoute(mockRouteGeometry, [{ category: 'hospital' }, { category: 'clinic' }]);
-    // In expansion loop (2km, 5km, 10km) if we get 3 it stops. Wait, here we only return 1, so it expands 3 times for 2 categories!
-    // So 3 levels * 2 categories = 6 calls!
-    assert.strictEqual(candidates.length, 1, 'Should deduplicate identical osmId elements');
+    const results = await PlaceSearchService.searchPlacesAlongRoute(mockRouteGeometry, [{ category: 'hospital' }, { category: 'clinic' }]);
+    
+    // Each requirement gets its own result object now. 
+    // They both should deduplicate the identical node within their own arrays, but since they are independent, 
+    // we check the first result's candidates.
+    assert.strictEqual(results[0].candidates.length, 1, 'Should deduplicate identical osmId elements within a requirement');
   });
 
   // 5. Multiple places sharing the same name
@@ -130,6 +139,27 @@ async function runTests() {
     } catch (err) {
       assert.match(err.message, /Invalid route geometry/);
     }
+  });
+
+  // 10. RequiredAttributes-only search
+  await test('Processes translation when only requiredAttributes are present', async () => {
+    const OsmTranslationService = require('../services/osmTranslationService');
+    const originalTranslate = OsmTranslationService.translateToOsmTags;
+    OsmTranslationService.translateToOsmTags = async () => ({
+      searchAlternatives: [],
+      requiredAttributes: [{ key: 'internet_access', value: 'wlan' }]
+    });
+
+    let fetchCalled = false;
+    OverpassService.fetchPlaces = async () => {
+      fetchCalled = true;
+      return [];
+    };
+
+    await PlaceSearchService.searchPlacesAlongRoute(mockRouteGeometry, [{ userRequirement: 'wifi' }]);
+    
+    OsmTranslationService.translateToOsmTags = originalTranslate;
+    assert.strictEqual(fetchCalled, true, 'Should call Overpass with requiredAttributes-only translation');
   });
 
   // Restore fetch

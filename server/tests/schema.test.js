@@ -31,10 +31,14 @@ function runTests() {
       numberOfStopsRequested: 1,
       requestedPlaces: [
         {
-          category: "Gurudwara",
+          userRequirement: "Gurudwara",
+          semanticIntent: "Sikh place of worship",
+          requirements: ["religion", "worship"],
+          confidence: 0.9,
           hardConstraints: [],
-          softPreferences: ["minimize extra driving time"],
-          ratingThreshold: { value: 4, operator: ">" }
+          softPreferences: [{ type: "minimize_additional_driving_time", weight: 1 }],
+          ratingThreshold: { value: 4, operator: ">" },
+          proximityPreference: "on_the_way"
         }
       ],
       maxAdditionalDrivingTime: null,
