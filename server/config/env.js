@@ -13,7 +13,7 @@ const missingEnvs = requiredEnvs.filter(env => !process.env[env]);
 if (missingEnvs.length > 0) {
   console.error(`[Error] Startup failed. Missing essential environment variables:`);
   missingEnvs.forEach(env => console.error(` - ${env}`));
-  console.error('Please configure them in your .env file (see .env.example).');
+  console.error('Please configure them in your .env file.');
   process.exit(1);
 }
 
@@ -38,12 +38,6 @@ const config = {
   // Local LLM Config (Ollama)
   ollamaEndpoint: process.env.OLLAMA_ENDPOINT,
   ollamaModelName: process.env.OLLAMA_MODEL_NAME,
-
-  // Cloud LLM Config (Ollama Cloud)
-  ollamaProviderMode: process.env.OLLAMA_PROVIDER_MODE || 'local', // 'local' or 'cloud'
-  ollamaCloudEndpoint: process.env.OLLAMA_CLOUD_ENDPOINT || 'https://ollama.com/api',
-  ollamaCloudModelName: process.env.OLLAMA_CLOUD_MODEL_NAME,
-  ollamaApiKey: process.env.OLLAMA_API_KEY,
 
   // Business Logic Limits & Thresholds
   requestTimeoutMs: parseInt(process.env.REQUEST_TIMEOUT_MS || '15000', 10),

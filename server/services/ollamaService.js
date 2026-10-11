@@ -2,30 +2,12 @@ const envConfig = require('../config/env');
 
 /**
  * Documentation of Error Scenarios:
- * 1. Unavailable Service: The local or cloud Ollama daemon is not running/reachable.
- * 2. Unavailable Model: The configured model is not available on the selected provider.
- * 3. Invalid Auth (Cloud): API key is incorrect or missing.
+ * 1. Unavailable Service: The local Ollama daemon is not running/reachable.
+ * 2. Unavailable Model: The configured model is not available locally.
  */
 class OllamaService {
   static _getProviderConfig() {
-    const isCloud = envConfig.ollamaProviderMode === 'cloud';
-    if (isCloud) {
-      if (!envConfig.ollamaApiKey) {
-        throw new Error('Ollama cloud mode enabled, but OLLAMA_API_KEY is not configured in environment variables.');
-      }
-      return {
-        isCloud: true,
-        endpoint: envConfig.ollamaCloudEndpoint || 'https://ollama.com/api',
-        model: envConfig.ollamaCloudModelName || 'gemma4:31b',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${envConfig.ollamaApiKey}`
-        }
-      };
-    }
-    
     return {
-      isCloud: false,
       endpoint: envConfig.ollamaEndpoint || 'http://localhost:11434',
       model: envConfig.ollamaModelName || 'llama3',
       headers: { 'Content-Type': 'application/json' }
@@ -33,7 +15,7 @@ class OllamaService {
   }
 
   /**
-   * Verifies if Ollama is reachable and if the configured model is available.
+   * Verifies if local Ollama is reachable and if the configured model is available.
    * @returns {Promise<{isReachable: boolean, hasModel: boolean, details: string}>}
    */
   static async checkHealth() {
@@ -51,9 +33,6 @@ class OllamaService {
       });
 
       if (!response.ok) {
-        if (response.status === 401) {
-          return { isReachable: true, hasModel: false, details: `Authentication failed (HTTP 401). Check your API Key.` };
-        }
         return { isReachable: true, hasModel: false, details: `Reachable but returned status: ${response.status}` };
       }
 
@@ -65,7 +44,7 @@ class OllamaService {
       return {
         isReachable: true,
         hasModel,
-        details: hasModel ? `Model '${conf.model}' is ready.` : `Model '${conf.model}' not found on ${conf.isCloud ? 'cloud' : 'local'} provider.`
+        details: hasModel ? `Model '${conf.model}' is ready.` : `Model '${conf.model}' not found on local provider.`
       };
     } catch (error) {
       return {
@@ -77,7 +56,7 @@ class OllamaService {
   }
 
   /**
-   * Generates text using the configured Ollama provider.
+   * Generates text using the configured local Ollama instance.
    * @param {string} prompt - The natural language prompt.
    * @param {object} options - Optional overrides.
    * @returns {Promise<string>} The generated text.
@@ -108,11 +87,8 @@ class OllamaService {
       throw new Error(`Ollama network failure: ${error.message}`);
     }
 
-    if (response.status === 401) {
-      throw new Error(`Ollama API Authentication failed (HTTP 401). Please verify your OLLAMA_API_KEY.`);
-    }
     if (response.status === 404) {
-      throw new Error(`Model '${conf.model}' not found. Run 'ollama pull ${conf.model}' or check cloud configuration.`);
+      throw new Error(`Model '${conf.model}' not found. Run 'ollama pull ${conf.model}'.`);
     }
     if (response.status === 400) {
       throw new Error(`Invalid model name or bad request sent to Ollama (HTTP 400).`);
@@ -131,3 +107,4 @@ class OllamaService {
 }
 
 module.exports = OllamaService;
+

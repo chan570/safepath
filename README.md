@@ -27,29 +27,11 @@ SafePath defaults to using a completely local Large Language Model (LLM) to inte
 
 ---
 
-## 2. Cloud LLM Setup (Optional)
-
-SafePath supports a cloud fallback mode if you prefer offloading prompt interpretation to Ollama Cloud. 
-**Privacy Warning:** When cloud mode is enabled, your natural-language prompt is sent to `ollama.com/api`. If your prompt contains location names, they will be transmitted to the cloud provider. SafePath does not send explicit routing coordinates, but the prompt text is sent verbatim.
-
-To enable cloud mode, set the following variables in your `server/.env`:
-```env
-OLLAMA_PROVIDER_MODE=cloud
-OLLAMA_API_KEY=your_api_key_here
-OLLAMA_CLOUD_MODEL_NAME=gemma4:31b
-```
-
----
-
-## 3. Environment Configuration
+## 2. Environment Configuration
 
 ### Backend Setup
 Navigate to the `server/` directory and configure the environment:
-1. Create a `.env` file from the example:
-   ```bash
-   cd server
-   cp .env.example .env
-   ```
+1. Configure your `server/.env` file with the required settings:
 2. The `.env` file exposes the following operational configurations:
    - `PORT=3001` (Backend server port)
    - `FRONTEND_ORIGIN=http://localhost:5173` (CORS restriction)
