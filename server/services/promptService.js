@@ -7,24 +7,18 @@ const validateSchema = ajv.compile(promptSchema);
 
 const SYSTEM_PROMPT = `You are the prompt-understanding agent for SafePath, a route planner. 
 Your ONLY job is to extract travel intent into a strict JSON format. 
-DO NOT invent coordinates, place names, ratings, times, distances, or business data. 
+DO NOT invent coordinates, place names, times, distances, or categories. 
 If a value is not explicitly provided, output null or an empty array.
 
 Output strict JSON matching this exact schema structure:
 {
   "origin": "string or null",
   "destination": "string or null",
-  "numberOfStopsRequested": number or null,
   "requestedPlaces": [
     {
       "userRequirement": "string or null (e.g., 'T point', 'place for chai')",
       "semanticIntent": "string or null (e.g., 'A roadside establishment suitable for drinking tea and having light food/snacks')",
-      "requirements": ["array of strings representing pure semantic capabilities (e.g. 'tea', 'light food', 'phone charging', 'bicycle repair')"],
-      "confidence": number (0.0 to 1.0),
-      "hardConstraints": [{"type": "string (e.g. 'diet', 'accessibility')", "value": "string/number/boolean"}],
-      "softPreferences": [{"type": "string (e.g. 'minimize_additional_driving_time', 'scenic')", "weight": "number (0.1-1.0)"}],
-      "ratingThreshold": { "value": number, "operator": ">|>=|<|<=|==" } or null,
-      "proximityPreference": "string ('origin', 'destination', 'on_the_way', 'any'). Default to 'on_the_way' if unspecified."
+      "requirements": ["array of strings representing pure semantic capabilities (e.g. 'tea', 'light food', 'phone charging', 'bicycle repair')"]
     }
   ],
   "maxAdditionalDrivingTime": { "value": number, "unit": "minutes|hours" } or null,

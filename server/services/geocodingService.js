@@ -21,6 +21,8 @@ class GeocodingService {
     url.searchParams.append('addressdetails', '1');
     // Pre-filtering by country improves accuracy, though we enforce administrative boundaries strictly later.
     url.searchParams.append('countrycodes', 'in');
+    //For example, the constructed URL for Ludhiana will resemble:
+//https://nominatim.openstreetmap.org/search?q=Ludhiana&format=jsonv2&addressdetails=1&countrycodes=in
 
     let response;
     let lastError;

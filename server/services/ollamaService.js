@@ -27,7 +27,7 @@ class OllamaService {
     }
 
     try {
-      const response = await fetch(`${conf.endpoint}/tags`, {
+      const response = await fetch(`${conf.endpoint}/tags`, { //available models endpoint
         headers: conf.headers,
         signal: AbortSignal.timeout(3000)
       });
@@ -69,7 +69,7 @@ class OllamaService {
     
     let response;
     try {
-      response = await fetch(`${conf.endpoint}/generate`, {
+      response = await fetch(`${conf.endpoint}/generate`, { // response endpoint for generating text
         method: 'POST',
         headers: conf.headers,
         body: JSON.stringify({

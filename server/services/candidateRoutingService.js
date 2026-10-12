@@ -70,25 +70,12 @@ class CandidateRoutingService {
     };
 
     // Pre-sort candidates by heuristic distance and local semantic match to ensure we slice the MOST RELEVANT ones.
-    const pref = reqPlace.proximityPreference || 'route';
+    const line = turf.lineString(baselineRoute.geometry.coordinates);
     const sortedCandidates = [...candidates].sort((a, b) => {
       const ptA = turf.point([a.lon, a.lat]);
       const ptB = turf.point([b.lon, b.lat]);
-      let distA, distB;
-
-      if (pref === 'origin') {
-        const targetPt = turf.point([originCoords.lon, originCoords.lat]);
-        distA = turf.distance(ptA, targetPt, { units: 'kilometers' });
-        distB = turf.distance(ptB, targetPt, { units: 'kilometers' });
-      } else if (pref === 'destination') {
-        const targetPt = turf.point([destCoords.lon, destCoords.lat]);
-        distA = turf.distance(ptA, targetPt, { units: 'kilometers' });
-        distB = turf.distance(ptB, targetPt, { units: 'kilometers' });
-      } else {
-        const line = turf.lineString(baselineRoute.geometry.coordinates);
-        distA = turf.pointToLineDistance(ptA, line, { units: 'kilometers' });
-        distB = turf.pointToLineDistance(ptB, line, { units: 'kilometers' });
-      }
+      const distA = turf.pointToLineDistance(ptA, line, { units: 'kilometers' });
+      const distB = turf.pointToLineDistance(ptB, line, { units: 'kilometers' });
       
       const scoreA = computePreScore(a);
       const scoreB = computePreScore(b);

@@ -32,13 +32,10 @@ async function runTests() {
     mockOllamaJSON({
       origin: "Ludhiana",
       destination: "Jalandhar",
-      numberOfStopsRequested: 1,
       requestedPlaces: [{
         userRequirement: "fuel station",
         semanticIntent: "Place to buy fuel",
-        requirements: ["fuel"],
-        confidence: 0.99,
-        hardConstraints: [], softPreferences: [], ratingThreshold: null, proximityPreference: "on_the_way"
+        requirements: ["fuel"]
       }],
       maxAdditionalDrivingTime: null,
       stopOrderRequirements: [],
@@ -57,10 +54,8 @@ async function runTests() {
     mockOllamaJSON({
       origin: "Delhi",
       destination: null, // Missing
-      numberOfStopsRequested: 1,
       requestedPlaces: [{ 
-        userRequirement: "restaurant", semanticIntent: "Food place", requirements: ["food"], confidence: 0.9, 
-        hardConstraints: [], softPreferences: [], ratingThreshold: null, proximityPreference: "on_the_way" 
+        userRequirement: "restaurant", semanticIntent: "Food place", requirements: ["food"]
       }],
       maxAdditionalDrivingTime: null, stopOrderRequirements: [], ambiguities: [], unsupportedRequirements: []
     });
@@ -75,7 +70,7 @@ async function runTests() {
   // 4. Markdown Wrapped JSON
   await test('Strips Markdown fences from JSON output', async () => {
     OllamaService.generateText = async () => '```json\n' + JSON.stringify({
-      origin: "A", destination: "B", numberOfStopsRequested: null,
+      origin: "A", destination: "B",
       requestedPlaces: [], maxAdditionalDrivingTime: null,
       stopOrderRequirements: [], ambiguities: [], unsupportedRequirements: []
     }) + '\n```';
@@ -104,7 +99,6 @@ async function runTests() {
       return JSON.stringify({
         origin: "A",
         // missing destination completely, breaking schema
-        numberOfStopsRequested: 1,
         requestedPlaces: [],
         maxAdditionalDrivingTime: null, stopOrderRequirements: [], ambiguities: [], unsupportedRequirements: []
       });

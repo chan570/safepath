@@ -28,17 +28,11 @@ function runTests() {
     const data = {
       origin: "Ludhiana",
       destination: "Jalandhar",
-      numberOfStopsRequested: 1,
       requestedPlaces: [
         {
           userRequirement: "Gurudwara",
           semanticIntent: "Sikh place of worship",
-          requirements: ["religion", "worship"],
-          confidence: 0.9,
-          hardConstraints: [],
-          softPreferences: [{ type: "minimize_additional_driving_time", weight: 1 }],
-          ratingThreshold: { value: 4, operator: ">" },
-          proximityPreference: "on_the_way"
+          requirements: ["religion", "worship"]
         }
       ],
       maxAdditionalDrivingTime: null,
@@ -66,7 +60,6 @@ function runTests() {
     const data = {
       origin: null,
       destination: null,
-      numberOfStopsRequested: null,
       requestedPlaces: [],
       maxAdditionalDrivingTime: null,
       stopOrderRequirements: [],
@@ -77,28 +70,27 @@ function runTests() {
     assert.ok(valid, `Schema validation failed: ${ajv.errorsText(validate.errors)}`);
   });
 
-  // 4. Rating Threshold Validation
-  test('Rejects invalid operators in rating threshold', () => {
+  // 4. Reject Removed and Extraneous Properties
+  test('Rejects removed legacy fields like ratingThreshold and numberOfStopsRequested', () => {
     const data = {
       origin: "A", destination: "B",
-      numberOfStopsRequested: 1,
       requestedPlaces: [{
-        category: "restaurant",
-        hardConstraints: [], softPreferences: [],
-        ratingThreshold: { value: 4, operator: "roughly" } // Invalid operator
+        userRequirement: "restaurant",
+        semanticIntent: "Food place",
+        requirements: ["food"],
+        ratingThreshold: { value: 4, operator: ">" } // Removed field
       }],
       maxAdditionalDrivingTime: null,
       stopOrderRequirements: [], ambiguities: [], unsupportedRequirements: []
     };
     const valid = validate(data);
-    assert.strictEqual(valid, false, 'Should reject invalid operator string');
+    assert.strictEqual(valid, false, 'Should reject obsolete properties');
   });
 
   // 5. Max Additional Driving Time Validation
   test('Rejects max time without unit', () => {
     const data = {
       origin: "A", destination: "B",
-      numberOfStopsRequested: null,
       requestedPlaces: [],
       maxAdditionalDrivingTime: { value: 10 }, // Missing 'unit'
       stopOrderRequirements: [], ambiguities: [], unsupportedRequirements: []

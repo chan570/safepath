@@ -49,11 +49,7 @@ class PlaceSearchService {
       for (const widthMeters of corridors) {
         stoppedAtLevel = widthMeters;
         const searchAreas = CorridorUtils.generateSearchAreas(routeGeometry, widthMeters);
-        
-        const orderedAreas = [...searchAreas];
-        if (reqPlace.proximityPreference === 'destination') {
-          orderedAreas.reverse();
-        }
+        const orderedAreas = searchAreas;
 
         let foundEnoughForPlace = false;
 

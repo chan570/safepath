@@ -69,22 +69,14 @@ class CandidateRankingService {
         return b.requirementMatchScore - a.requirementMatchScore; // DESC
       }
 
-      // 2. Soft Preferences or "On the way" Default (Minimize detour)
+      // 2. Minimize Detour (Default or min-time/min-dist)
       if (prefersMinDist) {
         if (a.viaPlaceDistanceMeters !== b.viaPlaceDistanceMeters) {
           return a.viaPlaceDistanceMeters - b.viaPlaceDistanceMeters;
         }
-      } else if (prefersMinTime || reqPlace.proximityPreference === 'on_the_way' || !reqPlace.proximityPreference) {
+      } else {
         if (a.additionalDurationSeconds !== b.additionalDurationSeconds) {
           return a.additionalDurationSeconds - b.additionalDurationSeconds;
-        }
-      } else if (reqPlace.proximityPreference === 'origin') {
-        if (a.originToPlaceDurationSeconds !== b.originToPlaceDurationSeconds) {
-          return a.originToPlaceDurationSeconds - b.originToPlaceDurationSeconds;
-        }
-      } else if (reqPlace.proximityPreference === 'destination') {
-        if (a.placeToDestinationDurationSeconds !== b.placeToDestinationDurationSeconds) {
-          return a.placeToDestinationDurationSeconds - b.placeToDestinationDurationSeconds;
         }
       }
       
